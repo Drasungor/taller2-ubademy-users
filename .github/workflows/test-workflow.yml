@@ -1,0 +1,12 @@
+name: test-workflow
+on: [push]
+jobs:
+  run-pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - run: pip install -r requirements.txt
+      - run: pytest
