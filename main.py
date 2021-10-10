@@ -34,7 +34,7 @@ class Number(Base):
     x = Column(Integer())
     y = Column(Integer())
 
-
+#Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 #result = conn.execute(text("select 'hello world'"))
 #print(result.all())
@@ -45,9 +45,18 @@ Base.metadata.create_all(engine)
 """result = conn.execute(text("SELECT x, y FROM some_table WHERE x > 1"))
 for row in result:
     print(f"x: {row.x}  y: {row.y}")"""
-session.add(Number(x = 0, y = 0))
-lines = session.query(Number).filter(Number.x == 0)
+#session.add(Number(x = 0, y = 2))
+#line_7 = session.query(Number).filter(Number.id == 5).delete()
+session.add(Number(x = 50, y = 234234))
+session.add(Number(id = 5, x = 0, y = 0))
+lines = session.query(Number)
 for line in lines:
-    print(f"x:{line.x} y:{line.y}")
+    print(f"id:{line.id} x:{line.x} y:{line.y}")
 session.commit()
 
+for table in session.execute(text("SELECT * FROM information_schema.tables")):
+    if (table[1] == "public"):
+        print(table)
+
+#session.execute(text("DROP TABLE some_table"))
+session.commit()
