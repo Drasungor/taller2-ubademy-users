@@ -12,11 +12,13 @@ import os
 
 
 app = FastAPI()
-#engine = create_engine(process.env.DATABASE_URL)
-#engine = create_engine(os.environ['DATABASE_URL'])
-#engine = create_engine(DATABASE_URL)
-#engine = create_engine("${DATABASE_URL}")
-engine = create_engine(os.environ.get('DATABASE_URL'))
+
+#Some versions of sqlalchemy do not support postgres in the url, it has to be postgresql
+db_url = os.environ.get('DATABASE_URL')
+if (db_url.find('postgresql') == -1):
+    db_url = db_url.replace('postgres', 'postgresql')
+
+engine = create_engine(db_url)
 session = sessionmaker(engine)()
 
 @app.get('/users/{username}', response_model=User)
@@ -60,4 +62,4 @@ if __name__ == '__main__':
     aux_user = session.query(db_user.User).first()
     print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
     """
-    uvicorn.run(app, host='0.0.0.0', port=8001)
+    uvicorn.run(app, host='0.0.0.0', port=os.environ.get('PORT'))
