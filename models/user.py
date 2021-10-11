@@ -24,7 +24,7 @@ class User(Base):
 
 
 
-"""
+
 
 fake_users_db = {
     "johndoe": {
@@ -37,7 +37,7 @@ fake_users_db = {
 }
 
 
-
+"""
 
 class User(BaseModel):
     username: str
