@@ -53,15 +53,10 @@ async def login(email: str, password: str):
 
 if __name__ == '__main__':
     #Crea la base de datos y le mete un usuario hardcodeado
-    
     """
     #db_user.Base.metadata.create_all(engine)
     session.add(db_user.User(email = "un_mail_random@gmail.com", password = "una_contrasenia", name = "Larry"))
     session.commit()
-    aux_user = session.query(db_user.User).first()
-    print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
-    """
-    """
     aux_user = session.query(db_user.User).first()
     print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
     """
