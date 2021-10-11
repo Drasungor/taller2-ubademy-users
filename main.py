@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, text, Column, Integer
+from sqlalchemy import create_engine, text, Column, Integer, String
 #from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -33,6 +33,7 @@ class Number(Base):
     id = Column(Integer, primary_key = True)
     x = Column(Integer())
     y = Column(Integer())
+    string_random = Column(String())
 
 Base.metadata.drop_all(engine)
 for table in session.execute(text("SELECT * FROM information_schema.tables")):
@@ -48,18 +49,22 @@ for table in session.execute(text("SELECT * FROM information_schema.tables")):
 """result = conn.execute(text("SELECT x, y FROM some_table WHERE x > 1"))
 for row in result:
     print(f"x: {row.x}  y: {row.y}")"""
-#session.add(Number(x = 0, y = 2))
+"""session.add(Number(x = 0, y = 2, string_random = "; DELETE FROM other_table"))
 #line_7 = session.query(Number).filter(Number.id == 5).delete()
-#session.add(Number(x = 50, y = 234234))
+session.add(Number(x = 50, y = 234234, string_random = "asdasdasd"))
 #session.add(Number(id = 5, x = 0, y = 0))
-"""lines = session.query(Number)
+lines = session.query(Number)
 for line in lines:
-    print(f"id:{line.id} x:{line.x} y:{line.y}")
+    print(f"id:{line.id} x:{line.x} y:{line.y} string:{line.string_random}")
 session.commit()
 
 for table in session.execute(text("SELECT * FROM information_schema.tables")):
     if (table[1] == "public"):
         print(table)
 
-#session.execute(text("DROP TABLE some_table"))
-session.commit()"""
+adasddasd = "1; DELETE FROM other_table"
+
+session.execute(text(f"SELECT x, y FROM other_table WHERE x > {adasddasd}"))
+
+#session.execute(text("DROP TABLE some_table"))"""
+session.commit()
