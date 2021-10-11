@@ -7,6 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import database_models.User as db_user
+from passlib.hash import pbkdf2_sha256
+
 
 app = FastAPI()
 engine = create_engine("postgres://pwmutypretbutp:e74306821a303bd574c10c1444dc22cd053edcc139d06b53fd5f457b1df725eb@ec2-34-199-15-136.compute-1.amazonaws.com:5432/df3a67v8n8bo9b")
@@ -31,11 +33,16 @@ async def pong():
     return {'message': 'pong'}
 
 
-@app.get('/login/')
+@app.get('/login/{email}/{password}')
 async def login(email: str, password: str):
     aux_user = session.query(db_user.User).filter(db_user.User.email == email).first()
-    print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
-    return {'message': 'aaaaaa'}
+    #print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
+    if (aux_user == None):
+        raise HTTPException(status_code=400, detail='User not found')
+    if (pbkdf2_sha256.verify(password, aux_user.hashed_password)):
+        return {'message': 'Correct user and password'}
+    else:
+        return {'message': 'Incorrect password'}
 
 
 
