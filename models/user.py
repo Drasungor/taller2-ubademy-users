@@ -1,5 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy import Column, String
+
+
+CONST_EMAIL_LENGTH = 50 #TODO: VER EL TAMANIO MAXIMO DE LOS MAILS
+CONST_PASSWORD_LENGTH = 50
+CONST_SALT_LENGTH = CONST_PASSWORD_LENGTH
 
 
 fake_users_db = {
@@ -13,9 +19,19 @@ fake_users_db = {
 }
 
 
-class User(BaseModel):
+class User(Base):
+    __tablename__ = "users"
+
+    email = Column(Integer(String(CONST_EMAIL_LENGTH)))
+    hashed_password = Column(String(CONST_PASSWORD_LENGTH))
+    hash_salt = Column(String(CONST_SALT_LENGTH))
+    
+
+
+"""class User(BaseModel):
     username: str
     hashed_password: str
     email: Optional[str] = None
     full_name: Optional[str] = None
-    disabled: Optional[bool] = None
+    disabled: Optional[bool] = None"""
+
