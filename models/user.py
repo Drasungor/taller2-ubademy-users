@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+
+
 fake_users_db = {
     "johndoe": {
         "username": "johndoe",
@@ -11,6 +13,8 @@ fake_users_db = {
         "disabled": False,
     }
 }
+
+
 
 
 class User(BaseModel):
