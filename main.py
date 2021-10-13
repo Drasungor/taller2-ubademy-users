@@ -66,4 +66,4 @@ if __name__ == '__main__':
     aux_user = session.query(db_user.User).first()
     print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
     """
-    uvicorn.run(app, host='0.0.0.0', port=os.environ.get('PORT'))
+    uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('BACKEND_USERS_PORT')))
