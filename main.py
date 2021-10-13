@@ -3,6 +3,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 
 from models.user import User, fake_users_db
+from models.login_data import Login
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -40,13 +41,16 @@ async def pong():
     return {'message': 'pong'}
 
 
-@app.get('/login/{email}/{password}')
-async def login(email: str, password: str):
-    aux_user = session.query(db_user.User).filter(db_user.User.email == email).first()
+#curl https://ubademy-users-backend.herokuapp.com/login/un_mail_random@gmail.com/una_contrasenia
+#curl --header "Content-Type: application/json" --request POST --data '{"email":"un_mail_random@gmail.com","password":"una_contrasenia"}' http://localhost:8003/login/
+
+@app.post('/login/')
+async def login(login_data: Login):
+    aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
     #print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
     if (aux_user == None):
         raise HTTPException(status_code=400, detail='User not found')
-    if (pbkdf2_sha256.verify(password, aux_user.hashed_password)):
+    if (pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
         return {'message': 'Correct user and password'}
     else:
         return {'message': 'Incorrect password'}
