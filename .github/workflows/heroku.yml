@@ -2,7 +2,8 @@ name: CD
 
 on: 
   push:
-    branches: [ main ]
+    tags:
+      - '*'
 
 jobs:
   build:
@@ -15,12 +16,8 @@ jobs:
       run: heroku container:login 
     - name: Build and push
       env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}}
-      run: docker build . -t users-backend
-      
-    - run: docker tag users-backend registry.heroku.com/${{secrets.HEROKU_APP_NAME}}/web
-    - run: docker push registry.heroku.com/${{secrets.HEROKU_APP_NAME}}/web 
-    
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web 
     - name: Release
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
