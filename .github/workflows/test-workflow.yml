@@ -1,8 +1,8 @@
 name: test-workflow
 on:
-  push:
-    branches:
-      main
+  pull_request:
+    branches: [ main ]
+    
 jobs:
   run-pytest:
     runs-on: ubuntu-latest
@@ -12,4 +12,9 @@ jobs:
         with:
           python-version: '3.x'
       - run: pip install -r requirements.txt
-      - run: pytest
+      - run: pip install pytest-cov
+      - run: pip install codecov
+      - run: pytest --cov=./ --cov-report=xml
+      
+      - name: Upload coverage to Codecov
+        run: codecov -t ${{ secrets.CODECOV_TOKEN }} -f coverage.xml
