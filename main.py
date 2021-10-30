@@ -54,5 +54,18 @@ async def login(login_data: Login):
         return {'message': 'Incorrect password'}
 
 
+# TODO: Refactorizar para que reciba un objeto User y persista el usuario creado
+@app.post('/create')
+async def create(user_data: dict):
+    if user_data.get('full_name') is None:
+        raise HTTPException(status_code=400, detail='No user full name!')
+
+    print(f"Usuario ${user_data['full_name']} creado!")
+    return {
+        'email': user_data['email'],
+        'password': user_data['password'],
+        'full_name': user_data['full_name']
+    }
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
