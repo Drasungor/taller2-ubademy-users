@@ -10,7 +10,8 @@ from sqlalchemy.ext.declarative import declarative_base
 import database_models.User as db_user
 from passlib.hash import pbkdf2_sha256
 import os
-
+from configuration.status_messages import public_status_messages
+import configuration.status_messages as status_messages
 
 app = FastAPI()
 
@@ -35,23 +36,22 @@ async def read_user(username: str):
 
 @app.get('/')
 async def home():
-    return {'message': 'Hello users!'}
+    return public_status_messages.get_message('hello_users')
 
 
 @app.get('/pong')
 async def pong():
-    return {'message': 'pong'}
+    return public_status_messages.get_message('pong')
 
 
 @app.post('/login/')
 async def login(login_data: Login):
     aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
-    if (aux_user == None):
-        raise HTTPException(status_code=400, detail='User not found')
-    if (pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
-        return {'message': 'Correct user and password'}
+    if ((aux_user == None) or (not pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password))):
+        #TODO: ver si detail puede ser un diccionario o si tiene que ser si o si un string
+        raise HTTPException(status_code=400, detail= public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD])
     else:
-        return {'message': 'Incorrect password'}
+        return public_status_messages.get_message('successful_login')
 
 
 if __name__ == '__main__':
