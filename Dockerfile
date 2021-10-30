@@ -17,6 +17,8 @@ ENV PORT=8001
 EXPOSE $PORT
 COPY main.py /app/
 COPY database_models /app/database_models
+COPY configuration /app/configuration
+COPY config_files /app/config_files
 COPY models /app/models
 COPY newrelic.ini /app/
 
