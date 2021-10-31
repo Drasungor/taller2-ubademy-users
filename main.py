@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import database_models.user as db_user
@@ -55,7 +55,8 @@ async def login(login_data: Login):
         return {'message': 'Incorrect password'}
 
 
-@app.post('/create/', response_model = Login)
+#@app.post('/create/', response_model = Login)
+@app.post('/create/')
 async def create(user_data: RegistrationData):
     # if user_data.get('full_name') is None:
     #     raise HTTPException(status_code=400, detail='No user full name!')
@@ -71,11 +72,16 @@ async def create(user_data: RegistrationData):
     #TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
 
     #sqlalchemy.exc.IntegrityError
+    #psycopg2.errors.UniqueViolation
     aux_user = db_user.User(user_data.email, user_data.password, user_data.name)
-    session.add(aux_user)
-    #session.commit()
+
+    try:
+        session.add(aux_user)
+        session.commit()
+        return {'status': 'ok', 'message': 'user successfully registered', 'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
+    except exc.IntegrityError:
+        return {'status': 'error', 'message': 'user already registered'}
     #return Login(user_data, aux_user.hashed_password)
-    return {'email': aux_user.email, 'password': aux_user.hashed_password}
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
