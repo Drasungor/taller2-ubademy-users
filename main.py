@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 import database_models.user as db_user
 from passlib.hash import pbkdf2_sha256
 import os
-
+import configuration.status_messages as status_messages
 
 app = FastAPI()
 
@@ -35,23 +35,24 @@ async def read_user(username: str):
 
 @app.get('/')
 async def home():
-    return {'message': 'Hello users!'}
+    return status_messages.public_status_messages.get_message('hello_users')
 
 
 @app.get('/pong')
 async def pong():
-    return {'message': 'pong'}
+    return status_messages.public_status_messages.get_message('pong')
 
 
 @app.post('/login/')
 async def login(login_data: Login):
     aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
-    if aux_user is None:
-        raise HTTPException(status_code=400, detail='User not found')
-    if (pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
-        return {'message': 'Correct user and password'}
+    if ((aux_user is None) or (not pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password))):
+        raise HTTPException(
+            status_code=400,
+            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
+        )
     else:
-        return {'message': 'Incorrect password'}
+        return status_messages.public_status_messages.get_message('successful_login')
 
 
 @app.post('/create/')

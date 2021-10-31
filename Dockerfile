@@ -1,11 +1,6 @@
-FROM ubuntu
+FROM python
 
 WORKDIR /app
-RUN apt-get update
-RUN apt-get -y update
-RUN apt-get -y install python3
-RUN apt-get -y install python3-pip
-RUN apt-get install -y --reinstall libpq-dev
 COPY requirements.txt /app/
 RUN pip3 install -r requirements.txt
 RUN pip3 install psycopg2
@@ -17,6 +12,8 @@ ENV PORT=8001
 EXPOSE $PORT
 COPY main.py /app/
 COPY database_models /app/database_models
+COPY configuration /app/configuration
+COPY config_files /app/config_files
 COPY models /app/models
 COPY newrelic.ini /app/
 
