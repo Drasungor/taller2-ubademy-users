@@ -18,6 +18,9 @@ class User(Base):
     #TODO: VER COMO METERIAMOS LO DEL USUARIO FEDERADO
 
     def __init__(self, email, password, name):
+        self.email = None
+        self.name = None
+        self.hashed_password = None
         if (email != ""):
             self.email = email
 
