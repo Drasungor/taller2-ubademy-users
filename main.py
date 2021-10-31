@@ -7,7 +7,6 @@ from models.login_data import Login
 from models.registration_data import RegistrationData
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 import database_models.user as db_user
 from passlib.hash import pbkdf2_sha256
 import os
@@ -16,7 +15,7 @@ import os
 app = FastAPI()
 
 
-#Some versions of sqlalchemy do not support postgres in the url, it has to be postgresql
+# Some versions of sqlalchemy do not support postgres in the url, it has to be postgresql
 db_url = os.environ.get('DATABASE_URL')
 if (db_url.find('postgresql') == -1):
     db_url = db_url.replace('postgres', 'postgresql')
@@ -47,7 +46,7 @@ async def pong():
 @app.post('/login/')
 async def login(login_data: Login):
     aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
-    if (aux_user == None):
+    if aux_user is None:
         raise HTTPException(status_code=400, detail='User not found')
     if (pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
         return {'message': 'Correct user and password'}
@@ -55,33 +54,23 @@ async def login(login_data: Login):
         return {'message': 'Incorrect password'}
 
 
-#@app.post('/create/', response_model = Login)
 @app.post('/create/')
 async def create(user_data: RegistrationData):
-    # if user_data.get('full_name') is None:
-    #     raise HTTPException(status_code=400, detail='No user full name!')
+    # TODO: AGREGAR REGISTRO CON GOOGLE
+    # TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
 
-    # print(f"Usuario ${user_data['full_name']} creado!")
-    # return {
-    #     'email': user_data['email'],
-    #     'password': user_data['password'],
-    #     'full_name': user_data['full_name']
-    # }
-
-    #TODO: AGREGAR REGISTRO CON GOOGLE
-    #TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
-
-    #sqlalchemy.exc.IntegrityError
-    #psycopg2.errors.UniqueViolation
+    # https://www.psycopg.org/docs/errors.html
+    # sqlalchemy.exc.IntegrityError
+    # psycopg2.errors.UniqueViolation
     aux_user = db_user.User(user_data.email, user_data.password, user_data.name)
 
     try:
         session.add(aux_user)
         session.commit()
-        return {'status': 'ok', 'message': 'user successfully registered', 'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
+        return {'status': 'ok', 'message': 'user successfully registered',
+                'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
     except exc.IntegrityError:
         return {'status': 'error', 'message': 'user already registered'}
-    #return Login(user_data, aux_user.hashed_password)
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
