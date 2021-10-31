@@ -55,9 +55,8 @@ async def login(login_data: Login):
         return {'message': 'Incorrect password'}
 
 
-# TODO: Refactorizar para que reciba un objeto User y persista el usuario creado
-@app.post('/sing_in/')
-async def create(registration_data: RegistrationData):
+@app.post('/create/', response_model = Login)
+async def create(user_data: RegistrationData):
     # if user_data.get('full_name') is None:
     #     raise HTTPException(status_code=400, detail='No user full name!')
 
@@ -70,9 +69,13 @@ async def create(registration_data: RegistrationData):
 
     #TODO: AGREGAR REGISTRO CON GOOGLE
     #TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
-    session.add(db_user.User(registration_data.email, registration_data.password, registration_data.name))
-    session.commit()
-    
+
+    #sqlalchemy.exc.IntegrityError
+    aux_user = db_user.User(user_data.email, user_data.password, user_data.name)
+    session.add(aux_user)
+    #session.commit()
+    #return Login(user_data, aux_user.hashed_password)
+    return {'email': aux_user.email, 'password': aux_user.hashed_password}
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
