@@ -1,11 +1,6 @@
-FROM ubuntu
+FROM python
 
 WORKDIR /app
-RUN apt-get update
-RUN apt-get -y update
-RUN apt-get -y install python3
-RUN apt-get -y install python3-pip
-RUN apt-get install -y --reinstall libpq-dev
 COPY requirements.txt /app/
 RUN pip3 install -r requirements.txt
 RUN pip3 install psycopg2
