@@ -5,7 +5,7 @@ import database_models.database_shared_constants as database_shared_constants
 
 Base = declarative_base()
 
-class User(Base):
+class Admin(Base):
     __tablename__ = "admins"
 
     username = Column(String(database_shared_constants.CONST_NAME_LENGTH), primary_key = True)

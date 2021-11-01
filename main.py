@@ -9,9 +9,11 @@ from models.admin_login_data import AdminLogin
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 import database_models.user as db_user
+import database_models.admin as db_admin
 from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
+from sqlalchemy.ext.declarative import declarative_base
 
 app = FastAPI()
 
@@ -23,6 +25,7 @@ if (db_url.find('postgresql') == -1):
 
 engine = create_engine(db_url)
 session = sessionmaker(engine)()
+Base = declarative_base()
 
 
 @app.get('/users/{username}', response_model=User)
@@ -57,8 +60,8 @@ async def login(login_data: Login):
 
 @app.post('/admin_login/')
 async def login(admin_login_data: AdminLogin):
-    aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
-    if ((aux_user is None) or (not pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password))):
+    aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.username == admin_login_data.username).first()
+    if ((aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password))):
         raise HTTPException(
             status_code=400,
             detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
@@ -86,3 +89,4 @@ async def create(user_data: RegistrationData):
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
+    
