@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
+from models.admin_login_data import AdminLogin
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 import database_models.user as db_user
@@ -54,6 +55,16 @@ async def login(login_data: Login):
     else:
         return status_messages.public_status_messages.get_message('successful_login')
 
+@app.post('/admin_login/')
+async def login(admin_login_data: AdminLogin):
+    aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
+    if ((aux_user is None) or (not pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password))):
+        raise HTTPException(
+            status_code=400,
+            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
+        )
+    else:
+        return status_messages.public_status_messages.get_message('successful_login')
 
 @app.post('/create/')
 async def create(user_data: RegistrationData):
