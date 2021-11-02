@@ -84,7 +84,6 @@ async def create(user_data: RegistrationData):
         session.add(aux_user)
         session.commit()
         return {'status': 'ok', 'message': 'user successfully registered',
-                #'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
                 'user': {'email': aux_user.email}}
     except exc.IntegrityError:
         return {'status': 'error', 'message': 'user already registered'}
@@ -100,7 +99,7 @@ async def create_admin(admin_data: AdminRegistrationData):
         session.add(aux_admin)
         session.commit()
         return {'status': 'ok', 'message': 'admin successfully registered',
-                'user': {'email': aux_admin.email, 'password': admin_data.password}}
+                'user': {'email': aux_admin.email}}
     except exc.IntegrityError:
         return {'status': 'error', 'message': 'user already registered'}
 
