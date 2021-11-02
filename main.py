@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
+from models.admin_registration_data import AdminRegistrationData
 from models.admin_login_data import AdminLogin
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
@@ -83,7 +84,23 @@ async def create(user_data: RegistrationData):
         session.add(aux_user)
         session.commit()
         return {'status': 'ok', 'message': 'user successfully registered',
-                'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
+                #'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
+                'user': {'email': aux_user.email}}
+    except exc.IntegrityError:
+        return {'status': 'error', 'message': 'user already registered'}
+
+
+# TODO: AGREGAR QUE LA CONTRASEÑA SE GENERE ALEATORIAMENTE Y SE ENVIE LA CUENTA POR MAIL
+# AL ADMIN QUE FUE REGISTRADO, LA CONTRASEÑA PUEDE SER EL HASH DEL MAIL O ALGO ASI
+@app.post('/admin_create/')
+async def create_admin(admin_data: AdminRegistrationData):
+    aux_admin = db_admin.Admin(admin_data.username, admin_data.email, admin_data.password, admin_data.name)
+
+    try:
+        session.add(aux_admin)
+        session.commit()
+        return {'status': 'ok', 'message': 'admin successfully registered',
+                'user': {'email': aux_admin.email, 'password': admin_data.password}}
     except exc.IntegrityError:
         return {'status': 'error', 'message': 'user already registered'}
 
