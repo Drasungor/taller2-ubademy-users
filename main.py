@@ -5,12 +5,16 @@ from fastapi import FastAPI, HTTPException
 from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
+from models.admin_registration_data import AdminRegistrationData
+from models.admin_login_data import AdminLogin
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 import database_models.user as db_user
+import database_models.admin as db_admin
 from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
+from sqlalchemy.ext.declarative import declarative_base
 
 app = FastAPI()
 
@@ -22,6 +26,7 @@ if (db_url.find('postgresql') == -1):
 
 engine = create_engine(db_url)
 session = sessionmaker(engine)()
+Base = declarative_base()
 
 
 @app.get('/users/{username}', response_model=User)
@@ -54,6 +59,16 @@ async def login(login_data: Login):
     else:
         return status_messages.public_status_messages.get_message('successful_login')
 
+@app.post('/admin_login/')
+async def login(admin_login_data: AdminLogin):
+    aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.username == admin_login_data.username).first()
+    if ((aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password))):
+        raise HTTPException(
+            status_code=400,
+            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
+        )
+    else:
+        return status_messages.public_status_messages.get_message('successful_login')
 
 @app.post('/create/')
 async def create(user_data: RegistrationData):
@@ -69,9 +84,25 @@ async def create(user_data: RegistrationData):
         session.add(aux_user)
         session.commit()
         return {'status': 'ok', 'message': 'user successfully registered',
-                'user': {'email': aux_user.email, 'password': aux_user.hashed_password}}
+                'user': {'email': aux_user.email}}
+    except exc.IntegrityError:
+        return {'status': 'error', 'message': 'user already registered'}
+
+
+# TODO: AGREGAR QUE LA CONTRASEÑA SE GENERE ALEATORIAMENTE Y SE ENVIE LA CUENTA POR MAIL
+# AL ADMIN QUE FUE REGISTRADO, LA CONTRASEÑA PUEDE SER EL HASH DEL MAIL O ALGO ASI
+@app.post('/admin_create/')
+async def create_admin(admin_data: AdminRegistrationData):
+    aux_admin = db_admin.Admin(admin_data.username, admin_data.email, admin_data.password, admin_data.name)
+
+    try:
+        session.add(aux_admin)
+        session.commit()
+        return {'status': 'ok', 'message': 'admin successfully registered',
+                'user': {'email': aux_admin.email}}
     except exc.IntegrityError:
         return {'status': 'error', 'message': 'user already registered'}
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
+    

@@ -5,14 +5,16 @@ import database_models.database_shared_constants as database_shared_constants
 
 Base = declarative_base()
 
-class User(Base):
-    __tablename__ = "users"
+class Admin(Base):
+    __tablename__ = "admins"
 
-    email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), primary_key = True)
+    username = Column(String(database_shared_constants.CONST_NAME_LENGTH), primary_key = True)
+    email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), nullable = False)
     hashed_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
     name = Column(String(database_shared_constants.CONST_NAME_LENGTH), nullable = False)
 
-    def __init__(self, email, password, name):
+    def __init__(self, username, email, password, name):
+        self.username = None
         self.email = None
         self.name = None
         self.hashed_password = None
@@ -24,3 +26,6 @@ class User(Base):
 
         if (name != ""):
             self.name = name
+
+        if (username != ""):
+            self.username = username
