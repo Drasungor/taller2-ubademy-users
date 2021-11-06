@@ -61,7 +61,7 @@ async def login(login_data: Login):
 
 @app.post('/admin_login/')
 async def login(admin_login_data: AdminLogin):
-    aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.username == admin_login_data.username).first()
+    aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.email == admin_login_data.email).first()
     if ((aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password))):
         raise HTTPException(
             status_code=400,
