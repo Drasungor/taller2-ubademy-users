@@ -86,6 +86,7 @@ async def create(user_data: RegistrationData):
         return {'status': 'ok', 'message': 'user successfully registered',
                 'user': {'email': aux_user.email}}
     except exc.IntegrityError:
+        session.rollback()
         return {'status': 'error', 'message': 'user already registered'}
 
 
@@ -101,6 +102,7 @@ async def create_admin(admin_data: AdminRegistrationData):
         return {'status': 'ok', 'message': 'admin successfully registered',
                 'user': {'email': aux_admin.email}}
     except exc.IntegrityError:
+        session.rollback()
         return {'status': 'error', 'message': 'user already registered'}
 
 if __name__ == '__main__':
