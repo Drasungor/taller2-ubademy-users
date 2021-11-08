@@ -61,7 +61,7 @@ async def login(login_data: Login):
 
 @app.post('/admin_login/')
 async def login(admin_login_data: AdminLogin):
-    aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.username == admin_login_data.username).first()
+    aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.email == admin_login_data.email).first()
     if ((aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password))):
         raise HTTPException(
             status_code=400,
@@ -86,6 +86,7 @@ async def create(user_data: RegistrationData):
         return {'status': 'ok', 'message': 'user successfully registered',
                 'user': {'email': aux_user.email}}
     except exc.IntegrityError:
+        session.rollback()
         return {'status': 'error', 'message': 'user already registered'}
 
 
@@ -93,7 +94,7 @@ async def create(user_data: RegistrationData):
 # AL ADMIN QUE FUE REGISTRADO, LA CONTRASEÑA PUEDE SER EL HASH DEL MAIL O ALGO ASI
 @app.post('/admin_create/')
 async def create_admin(admin_data: AdminRegistrationData):
-    aux_admin = db_admin.Admin(admin_data.username, admin_data.email, admin_data.password, admin_data.name)
+    aux_admin = db_admin.Admin(admin_data.email, admin_data.password, admin_data.name)
 
     try:
         session.add(aux_admin)
@@ -101,8 +102,10 @@ async def create_admin(admin_data: AdminRegistrationData):
         return {'status': 'ok', 'message': 'admin successfully registered',
                 'user': {'email': aux_admin.email}}
     except exc.IntegrityError:
+        session.rollback()
         return {'status': 'error', 'message': 'user already registered'}
 
 if __name__ == '__main__':
+    Base.metadata.create_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     

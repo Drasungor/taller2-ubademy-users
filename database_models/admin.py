@@ -8,13 +8,11 @@ Base = declarative_base()
 class Admin(Base):
     __tablename__ = "admins"
 
-    username = Column(String(database_shared_constants.CONST_NAME_LENGTH), primary_key = True)
-    email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), nullable = False)
+    email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), primary_key = True)
     hashed_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
     name = Column(String(database_shared_constants.CONST_NAME_LENGTH), nullable = False)
 
-    def __init__(self, username, email, password, name):
-        self.username = None
+    def __init__(self, email, password, name):
         self.email = None
         self.name = None
         self.hashed_password = None
@@ -26,6 +24,3 @@ class Admin(Base):
 
         if (name != ""):
             self.name = name
-
-        if (username != ""):
-            self.username = username
