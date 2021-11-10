@@ -110,9 +110,11 @@ async def users_list():
     for email in emails_query:
         emails_list.append(email[0])
 
-    return_message = status_messages.public_status_messages.get_message('successful_get_users').copy()
-    return_message["users"] = emails_list
-    return return_message
+    return_message = status_messages.public_status_messages.get_message('successful_get_users')
+    return {
+        **return_message,
+        "users": emails_list
+        }
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
