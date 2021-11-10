@@ -2,5 +2,6 @@
 "successful_login": {"status": "ok", "message": "correct username and password"},
 "failed_login": {"status": "ok", "message": "incorrect username or password"}, 
 "hello_users": {"status": "ok", "message": "Hello users!"},
-"pong": {"status": "ok", "message": "pong"}
+"pong": {"status": "ok", "message": "pong"},
+"successful_get_users": {"status": "ok", "message": "users read correctly"}
 }

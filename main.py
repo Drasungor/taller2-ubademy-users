@@ -90,8 +90,6 @@ async def create(user_data: RegistrationData):
         return {'status': 'error', 'message': 'user already registered'}
 
 
-# TODO: AGREGAR QUE LA CONTRASEÑA SE GENERE ALEATORIAMENTE Y SE ENVIE LA CUENTA POR MAIL
-# AL ADMIN QUE FUE REGISTRADO, LA CONTRASEÑA PUEDE SER EL HASH DEL MAIL O ALGO ASI
 @app.post('/admin_create/')
 async def create_admin(admin_data: AdminRegistrationData):
     aux_admin = db_admin.Admin(admin_data.email, admin_data.password, admin_data.name)
@@ -105,7 +103,19 @@ async def create_admin(admin_data: AdminRegistrationData):
         session.rollback()
         return {'status': 'error', 'message': 'user already registered'}
 
+@app.get('/users_list')
+async def users_list():
+    emails_query = session.query(db_user.User.email).all()
+    emails_list = []
+    for email in emails_query:
+        emails_list.append(email[0])
+
+    return_message = status_messages.public_status_messages.get_message('successful_get_users')
+    return {
+        **return_message,
+        "users": emails_list
+        }
+
 if __name__ == '__main__':
-    Base.metadata.create_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     
