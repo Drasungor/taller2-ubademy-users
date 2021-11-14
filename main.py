@@ -110,11 +110,21 @@ async def create_admin(admin_data: AdminRegistrationData):
     try:
         session.add(aux_admin)
         session.commit()
-        return {'status': 'ok', 'message': 'admin successfully registered',
-                'user': {'email': aux_admin.email}}
+        return {
+            **status_messages.public_status_messages.get_message('successful_registration'),
+            'email': aux_admin.email
+            }
     except exc.IntegrityError:
-        session.rollback()
-        return {'status': 'error', 'message': 'user already registered'}
+        if isinstance(e.orig, psycopg2.errors.NotNullViolation):
+            return status_messages.public_status_messages.get_message('null_value')
+        elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
+            return status_messages.public_status_messages.get_message('existing_user')
+        else:
+            message = status_messages.public_status_messages.get_message('unexpected_error')
+            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
+            status_code=message["code"],
+            detail=message[status_messages.MESSAGE_NAME_FIELD]
+        )
 
 @app.get('/users_list')
 async def users_list():
