@@ -146,11 +146,7 @@ async def create_admin(admin_data: AdminRegistrationData):
         elif isinstance(e.orig, UniqueViolation):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
-            message = status_messages.public_status_messages.get_message('unexpected_error')
-            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
-            status_code=message["code"],
-            detail=message[status_messages.MESSAGE_NAME_FIELD]
-        )
+            raise UnexpectedErrorException
     except DataError as e:
         session.rollback()
         if isinstance(e.orig, StringDataRightTruncation):
@@ -158,11 +154,7 @@ async def create_admin(admin_data: AdminRegistrationData):
                 **status_messages.public_status_messages.get_message('wrong_size_input'),
                 'input_sizes': db_admin.data_size}
         else:
-            message = status_messages.public_status_messages.get_message('unexpected_error')
-            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
-            status_code=message["code"],
-            detail=message[status_messages.MESSAGE_NAME_FIELD]
-            )
+            raise UnexpectedErrorException
     except Exception:
         session.rollback()
         raise UnexpectedErrorException
