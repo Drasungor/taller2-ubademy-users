@@ -7,7 +7,8 @@ from models.login_data import Login
 from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
 from models.admin_login_data import AdminLogin
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm import sessionmaker
 import database_models.user as db_user
 import database_models.admin as db_admin
@@ -15,7 +16,7 @@ from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
 from sqlalchemy.ext.declarative import declarative_base
-import psycopg2
+from psycopg2.errors import  NotNullViolation, UniqueViolation, StringDataRightTruncation
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
 
@@ -104,17 +105,17 @@ async def create(user_data: RegistrationData):
             'email': aux_user.email,
             'name': aux_user.name
             }
-    except exc.IntegrityError as e:
+    except IntegrityError as e:
         session.rollback()
-        if isinstance(e.orig, psycopg2.errors.NotNullViolation):
+        if isinstance(e.orig, NotNullViolation):
             return status_messages.public_status_messages.get_message('null_value')
-        elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
+        elif isinstance(e.orig, UniqueViolation):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
             raise UnexpectedErrorException
-    except exc.DataError as e:
+    except DataError as e:
         session.rollback()
-        if isinstance(e.orig, psycopg2.errors.StringDataRightTruncation):
+        if isinstance(e.orig, StringDataRightTruncation):
             return {
                 **status_messages.public_status_messages.get_message('wrong_size_input'),
                 'input_sizes': db_user.data_size}
@@ -140,9 +141,9 @@ async def create_admin(admin_data: AdminRegistrationData):
             }
     except exc.IntegrityError as e:
         session.rollback()
-        if isinstance(e.orig, psycopg2.errors.NotNullViolation):
+        if isinstance(e.orig, NotNullViolation):
             return status_messages.public_status_messages.get_message('null_value')
-        elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
+        elif isinstance(e.orig, UniqueViolation):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
             message = status_messages.public_status_messages.get_message('unexpected_error')
@@ -152,7 +153,7 @@ async def create_admin(admin_data: AdminRegistrationData):
         )
     except exc.DataError as e:
         session.rollback()
-        if isinstance(e.orig, psycopg2.errors.StringDataRightTruncation):
+        if isinstance(e.orig, StringDataRightTruncation):
             return {
                 **status_messages.public_status_messages.get_message('wrong_size_input'),
                 'input_sizes': db_admin.data_size}
