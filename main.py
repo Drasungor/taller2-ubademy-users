@@ -86,7 +86,8 @@ async def create(user_data: RegistrationData):
         session.commit()
         return {
             **status_messages.public_status_messages.get_message('successful_registration'),
-            'email': aux_user.email
+            'email': aux_user.email,
+            'name': aux_user.name
             }
     except exc.IntegrityError as e:
         session.rollback()
@@ -112,7 +113,8 @@ async def create_admin(admin_data: AdminRegistrationData):
         session.commit()
         return {
             **status_messages.public_status_messages.get_message('successful_registration'),
-            'email': aux_admin.email
+            'email': aux_admin.email,
+            'name': aux_admin.name
             }
     except exc.IntegrityError as e:
         session.rollback()
