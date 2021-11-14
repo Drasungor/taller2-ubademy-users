@@ -1,13 +1,14 @@
 import uvicorn
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 
 from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
 from models.admin_login_data import AdminLogin
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm import sessionmaker
 import database_models.user as db_user
 import database_models.admin as db_admin
@@ -15,7 +16,9 @@ from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
 from sqlalchemy.ext.declarative import declarative_base
-import psycopg2
+from psycopg2.errors import  NotNullViolation, UniqueViolation, StringDataRightTruncation
+from server_exceptions.unexpected_error import UnexpectedErrorException
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -28,6 +31,18 @@ if (db_url.find('postgresql') == -1):
 engine = create_engine(db_url)
 session = sessionmaker(engine)()
 Base = declarative_base()
+
+
+
+@app.exception_handler(UnexpectedErrorException)
+async def invalid_credentials_exception_handler(_request: Request,
+                                                _exc: UnexpectedErrorException):
+    message = status_messages.public_status_messages.get_message('unexpected_error')
+    return JSONResponse(
+        status_code=420,
+        content=message
+    )
+
 
 
 @app.get('/users/{username}', response_model=User)
@@ -64,6 +79,7 @@ async def login(login_data: Login):
 async def login(admin_login_data: AdminLogin):
     aux_admin = session.query(db_admin.Admin).filter(db_admin.Admin.email == admin_login_data.email).first()
     if ((aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password))):
+        # TODO: ESTO NO TIENE QUE SER UNA RESPUESTA CON 400
         raise HTTPException(
             status_code=400,
             detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
@@ -89,18 +105,25 @@ async def create(user_data: RegistrationData):
             'email': aux_user.email,
             'name': aux_user.name
             }
-    except exc.IntegrityError as e:
+    except IntegrityError as e:
         session.rollback()
-        if isinstance(e.orig, psycopg2.errors.NotNullViolation):
+        if isinstance(e.orig, NotNullViolation):
             return status_messages.public_status_messages.get_message('null_value')
-        elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
+        elif isinstance(e.orig, UniqueViolation):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
-            message = status_messages.public_status_messages.get_message('unexpected_error')
-            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
-            status_code=message["code"],
-            detail=message[status_messages.MESSAGE_NAME_FIELD]
-        )
+            raise UnexpectedErrorException
+    except DataError as e:
+        session.rollback()
+        if isinstance(e.orig, StringDataRightTruncation):
+            return {
+                **status_messages.public_status_messages.get_message('wrong_size_input'),
+                'input_sizes': db_user.data_size}
+        else:
+            raise UnexpectedErrorException
+    except Exception:
+        session.rollback()
+        raise UnexpectedErrorException
     
 
 
@@ -116,18 +139,27 @@ async def create_admin(admin_data: AdminRegistrationData):
             'email': aux_admin.email,
             'name': aux_admin.name
             }
-    except exc.IntegrityError as e:
+    except IntegrityError as e:
         session.rollback()
-        if isinstance(e.orig, psycopg2.errors.NotNullViolation):
+        if isinstance(e.orig, NotNullViolation):
             return status_messages.public_status_messages.get_message('null_value')
-        elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
+        elif isinstance(e.orig, UniqueViolation):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
-            message = status_messages.public_status_messages.get_message('unexpected_error')
-            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
-            status_code=message["code"],
-            detail=message[status_messages.MESSAGE_NAME_FIELD]
-        )
+            raise UnexpectedErrorException
+    except DataError as e:
+        session.rollback()
+        if isinstance(e.orig, StringDataRightTruncation):
+            return {
+                **status_messages.public_status_messages.get_message('wrong_size_input'),
+                'input_sizes': db_admin.data_size}
+        else:
+            raise UnexpectedErrorException
+    except Exception:
+        session.rollback()
+        raise UnexpectedErrorException
+
+
 
 @app.get('/users_list')
 async def users_list():

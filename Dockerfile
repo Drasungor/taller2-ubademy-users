@@ -16,6 +16,7 @@ COPY configuration /app/configuration
 COPY config_files /app/config_files
 COPY models /app/models
 COPY newrelic.ini /app/
+COPY server_exceptions /app/server_exceptions
 
 #CMD python3 main.py
 CMD NEW_RELIC_CONFIG_FILE=newrelic.ini newrelic-admin run-program python3 main.py

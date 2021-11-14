@@ -5,6 +5,13 @@ import database_models.database_shared_constants as database_shared_constants
 
 Base = declarative_base()
 
+
+data_size = {
+    'email': database_shared_constants.CONST_EMAIL_LENGTH,
+    'name': database_shared_constants.CONST_NAME_LENGTH,
+    }
+
+
 class User(Base):
     __tablename__ = "users"
 
