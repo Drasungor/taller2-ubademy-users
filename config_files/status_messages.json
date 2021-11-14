@@ -5,5 +5,7 @@
 "pong": {"status": "ok", "message": "pong"},
 "successful_get_users": {"status": "ok", "message": "users read correctly"},
 "successful_registration": {"status": "ok", "message": "user successfully registered"},
-"existing_user": {"status": "error", "message": "user already registered"}
+"existing_user": {"status": "error", "message": "user already registered"},
+"null_value": {"status": "error", "message": "null value received"},
+"unexpected_error": {"status":"error", "message": "error unexpected", "code": 420}
 }

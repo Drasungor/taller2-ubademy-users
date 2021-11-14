@@ -15,6 +15,7 @@ from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
 from sqlalchemy.ext.declarative import declarative_base
+import psycopg2
 
 app = FastAPI()
 
@@ -87,9 +88,19 @@ async def create(user_data: RegistrationData):
             **status_messages.public_status_messages.get_message('successful_registration'),
             'email': aux_user.email
             }
-    except exc.IntegrityError:
+    except exc.IntegrityError as e:
         session.rollback()
-        return status_messages.public_status_messages.get_message('existing_user')
+        if isinstance(e.orig, psycopg2.errors.NotNullViolation):
+            return status_messages.public_status_messages.get_message('null_value')
+        elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
+            return status_messages.public_status_messages.get_message('existing_user')
+        else:
+            message = status_messages.public_status_messages.get_message('unexpected_error')
+            raise HTTPException(
+            status_code=message["code"],
+            detail=message[status_messages.MESSAGE_NAME_FIELD]
+        )
+    
 
 
 @app.post('/admin_create/')
