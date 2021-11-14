@@ -101,6 +101,25 @@ async def create(user_data: RegistrationData):
             status_code=message["code"],
             detail=message[status_messages.MESSAGE_NAME_FIELD]
         )
+    except exc.DataError as e:
+        session.rollback()
+        if isinstance(e.orig, psycopg2.errors.StringDataRightTruncation):
+            return {
+                **status_messages.public_status_messages.get_message('wrong_size_input'),
+                'input_sizes': db_user.data_size}
+        else:
+            message = status_messages.public_status_messages.get_message('unexpected_error')
+            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
+            status_code=message["code"],
+            detail=message[status_messages.MESSAGE_NAME_FIELD]
+        )
+    except Exception:
+        session.rollback()
+        message = status_messages.public_status_messages.get_message('unexpected_error')
+        raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
+        status_code=message["code"],
+        detail=message[status_messages.MESSAGE_NAME_FIELD]
+        )
     
 
 
@@ -128,6 +147,27 @@ async def create_admin(admin_data: AdminRegistrationData):
             status_code=message["code"],
             detail=message[status_messages.MESSAGE_NAME_FIELD]
         )
+    except exc.DataError as e:
+        session.rollback()
+        if isinstance(e.orig, psycopg2.errors.StringDataRightTruncation):
+            return {
+                **status_messages.public_status_messages.get_message('wrong_size_input'),
+                'input_sizes': db_admin.data_size}
+        else:
+            message = status_messages.public_status_messages.get_message('unexpected_error')
+            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
+            status_code=message["code"],
+            detail=message[status_messages.MESSAGE_NAME_FIELD]
+            )
+    except Exception:
+        session.rollback()
+        message = status_messages.public_status_messages.get_message('unexpected_error')
+        raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
+        status_code=message["code"],
+        detail=message[status_messages.MESSAGE_NAME_FIELD]
+        )
+
+
 
 @app.get('/users_list')
 async def users_list():
