@@ -112,14 +112,14 @@ async def create(user_data: RegistrationData):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
             raise UnexpectedErrorException
-    # except exc.DataError as e:
-    #     session.rollback()
-    #     if isinstance(e.orig, psycopg2.errors.StringDataRightTruncation):
-    #         return {
-    #             **status_messages.public_status_messages.get_message('wrong_size_input'),
-    #             'input_sizes': db_user.data_size}
-    #     else:
-    #         raise UnexpectedErrorException
+    except exc.DataError as e:
+        session.rollback()
+        if isinstance(e.orig, psycopg2.errors.StringDataRightTruncation):
+            return {
+                **status_messages.public_status_messages.get_message('wrong_size_input'),
+                'input_sizes': db_user.data_size}
+        else:
+            raise UnexpectedErrorException
     except Exception:
         session.rollback()
         raise UnexpectedErrorException
