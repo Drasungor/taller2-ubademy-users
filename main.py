@@ -83,11 +83,13 @@ async def create(user_data: RegistrationData):
     try:
         session.add(aux_user)
         session.commit()
-        return {'status': 'ok', 'message': 'user successfully registered',
-                'user': {'email': aux_user.email}}
+        return {
+            **status_messages.public_status_messages.get_message('successful_registration'),
+            'email': aux_user.email
+            }
     except exc.IntegrityError:
         session.rollback()
-        return {'status': 'error', 'message': 'user already registered'}
+        return status_messages.public_status_messages.get_message('existing_user')
 
 
 @app.post('/admin_create/')
