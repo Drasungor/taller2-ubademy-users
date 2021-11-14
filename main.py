@@ -114,7 +114,8 @@ async def create_admin(admin_data: AdminRegistrationData):
             **status_messages.public_status_messages.get_message('successful_registration'),
             'email': aux_admin.email
             }
-    except exc.IntegrityError:
+    except exc.IntegrityError as e:
+        session.rollback()
         if isinstance(e.orig, psycopg2.errors.NotNullViolation):
             return status_messages.public_status_messages.get_message('null_value')
         elif isinstance(e.orig, psycopg2.errors.UniqueViolation):
