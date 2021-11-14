@@ -96,7 +96,7 @@ async def create(user_data: RegistrationData):
             return status_messages.public_status_messages.get_message('existing_user')
         else:
             message = status_messages.public_status_messages.get_message('unexpected_error')
-            raise HTTPException(
+            raise HTTPException(# TODO: AGREGAR KEYWORD EN EL ARCHIVO PARA CODE COMO LO ES status_messages.MESSAGE_NAME_FIELD
             status_code=message["code"],
             detail=message[status_messages.MESSAGE_NAME_FIELD]
         )
