@@ -1,9 +1,7 @@
 from sqlalchemy import Column, String
-from sqlalchemy.ext.declarative import declarative_base
 from passlib.hash import pbkdf2_sha256
 import database_models.database_shared_constants as database_shared_constants
-
-Base = declarative_base()
+from database.database import Base
 
 class User(Base):
     __tablename__ = "users"
