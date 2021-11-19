@@ -85,7 +85,7 @@ def test_create_user_fails_to_create_the_same_user_multiple_times(test_db):
     )
     assert response.status_code == 420
     data = response.json()
-    assert data['detail'] == 'error unexpected'
+    assert data['message'] == 'error unexpected'
 
 
 def test_users_list_returns_all_registered_emails(test_db):

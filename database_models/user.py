@@ -3,6 +3,13 @@ from passlib.hash import pbkdf2_sha256
 import database_models.database_shared_constants as database_shared_constants
 from database.database import Base
 
+
+data_size = {
+    'email': database_shared_constants.CONST_EMAIL_LENGTH,
+    'name': database_shared_constants.CONST_NAME_LENGTH,
+    }
+
+
 class User(Base):
     __tablename__ = "users"
 
