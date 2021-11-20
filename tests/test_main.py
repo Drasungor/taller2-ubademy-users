@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from pytest import fixture
 
 from database.database import Base
+from configuration.status_messages import public_status_messages
 
 
 SQLITE_DATABASE_URL = "sqlite:///./test.db"
@@ -39,7 +40,7 @@ def test_home(test_db):
     response = client.get('/')
     assert response.status_code != 400
     assert response.status_code == 200
-    assert response.json() == {'status': 'ok', 'message': 'Hello users!'}
+    assert response.json() == public_status_messages.get_message('hello_users')
 
 
 def test_create_user(test_db):
