@@ -2,3 +2,4 @@ openapi.json
 .idea
 __pycache__
 */__pycache__
+tests/test.db

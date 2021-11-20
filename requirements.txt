@@ -13,6 +13,7 @@ ecdsa==0.17.0
 fastapi==0.68.1
 filelock==3.3.0
 flake8==3.9.2
+greenlet==1.1.2
 h11==0.12.0
 httptools==0.2.0
 identify==2.3.0
@@ -20,12 +21,14 @@ idna==3.2
 importlib-metadata==4.8.1
 iniconfig==1.1.1
 mccabe==0.6.1
+newrelic==7.0.0.166
 nodeenv==1.6.0
 packaging==21.0
 passlib==1.7.4
 platformdirs==2.4.0
 pluggy==1.0.0
 pre-commit==2.15.0
+psycopg2==2.9.1
 py==1.10.0
 pyasn1==0.4.8
 pycodestyle==2.7.0
@@ -41,6 +44,7 @@ PyYAML==5.4.1
 requests==2.26.0
 rsa==4.7.2
 six==1.16.0
+SQLAlchemy==1.4.25
 starlette==0.14.2
 toml==0.10.2
 typing-extensions==3.10.0.2
