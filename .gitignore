@@ -3,3 +3,4 @@ openapi.json
 __pycache__
 */__pycache__
 tests/test.db
+sql_app.db
