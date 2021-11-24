@@ -6,7 +6,6 @@ from database.database import Base
 
 data_size = {
     'email': database_shared_constants.CONST_EMAIL_LENGTH,
-    'name': database_shared_constants.CONST_NAME_LENGTH,
     }
 
 
@@ -15,17 +14,12 @@ class User(Base):
 
     email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), primary_key = True)
     hashed_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
-    name = Column(String(database_shared_constants.CONST_NAME_LENGTH), nullable = False)
 
-    def __init__(self, email, password, name):
+    def __init__(self, email, password):
         self.email = None
-        self.name = None
         self.hashed_password = None
         if (email != ""):
             self.email = email
 
         if (password != ""):
             self.hashed_password = pbkdf2_sha256.hash(password)
-
-        if (name != ""):
-            self.name = name

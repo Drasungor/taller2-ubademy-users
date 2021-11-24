@@ -95,7 +95,7 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     # https://www.psycopg.org/docs/errors.html
     # sqlalchemy.exc.IntegrityError
     # psycopg2.errors.UniqueViolation
-    aux_user = DbUser(user_data.email, user_data.password, user_data.name)
+    aux_user = DbUser(user_data.email, user_data.password)
 
     try:
         db.add(aux_user)
@@ -103,7 +103,6 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
         return {
             **status_messages.public_status_messages.get_message('successful_registration'),
             'email': aux_user.email,
-            'name': aux_user.name
             }
     except exc.IntegrityError as e:
         db.rollback()
