@@ -1,0 +1,21 @@
+version: '3.3'
+services: 
+  postgres:
+    image: 'postgres:latest'
+    restart: always
+    volumes:
+      - './postgres_data:/var/lib/postgresql/data'
+    environment:
+      - POSTGRES_PASSWORD=123456
+    ports:
+      - '5432:5432'
+
+  backend_users:
+    build: ../taller2-ubademy-users
+    container_name: backend_users
+    image: backend_users
+    expose:
+      - "8001"
+    volumes:
+      - ./../taller2-ubademy-users:/app
+
