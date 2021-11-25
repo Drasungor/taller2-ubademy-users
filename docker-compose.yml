@@ -12,10 +12,14 @@ services:
 
   backend_users:
     build: ../taller2-ubademy-users
-    container_name: backend_users
+    container_name: compose_backend_users
     image: backend_users
     expose:
       - "8001"
+    ports:
+      - '5432:5432'
     volumes:
       - ./../taller2-ubademy-users:/app
+    depends_on:
+      - postgres
 
