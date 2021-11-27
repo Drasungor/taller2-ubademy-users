@@ -20,8 +20,6 @@ COPY models /app/models
 COPY database /app/database
 COPY newrelic.ini /app/
 COPY server_exceptions /app/server_exceptions
-COPY server_exceptions /app/server_exceptions
-COPY wait-for-postgres.sh /app/wait-for-postgres.sh
 
 #CMD python3 main.py
 CMD NEW_RELIC_CONFIG_FILE=newrelic.ini newrelic-admin run-program python3 main.py
