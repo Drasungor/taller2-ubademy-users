@@ -17,6 +17,7 @@ while not has_connected:
         engine = create_engine(db_url, connect_args=engine_args)
     except Exception:
         print(f"Failed to connect to database with url {db_url}, attempting to reconnect")
+        sleep(1)
     else:
         has_connected = True
 
