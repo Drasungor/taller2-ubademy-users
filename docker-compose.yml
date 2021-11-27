@@ -4,8 +4,10 @@ services:
     image: 'postgres:latest'
     restart: always
     volumes:
-      - './postgres_data:/var/lib/postgresql/data'
+      - './compose_postgres_db/postgres_data:/var/lib/postgresql/data'
     environment:
+      - PUID=1000
+      - PGID=1000
       - POSTGRES_PASSWORD=123456
     expose:
       - "5432"
