@@ -20,6 +20,8 @@ from psycopg2.errors import NotNullViolation, UniqueViolation, StringDataRightTr
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
 
+API_KEY = 'db927b6105712695971a38fa593db084d95f86f68a1f85030ff5326d7a30c673'
+
 Base.metadata.create_all(engine)
 
 app = FastAPI()
@@ -31,6 +33,17 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@app.middleware("http")
+async def verify_api_key(request: Request, _call_next):
+    authorization = request.headers['Authorization']
+    if authorization != API_KEY:
+        message = status_messages.public_status_messages.get_message('unauthorized_api_key')
+        return JSONResponse(
+            status_code=200,
+            content=message
+        )
 
 
 @app.exception_handler(UnexpectedErrorException)

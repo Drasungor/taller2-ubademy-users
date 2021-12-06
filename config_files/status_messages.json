@@ -8,5 +8,6 @@
 "existing_user": {"status": "error", "message": "user already registered"},
 "null_value": {"status": "error", "message": "null value received"},
 "unexpected_error": {"status": "error", "message": "error unexpected"},
-"wrong_size_input": {"status": "error", "message": "wrong input size"}
+"wrong_size_input": {"status": "error", "message": "wrong input size"},
+"unauthorized_api_key": {"status":  "error", "message": "unauthorized api key"}
 }
