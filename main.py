@@ -36,7 +36,7 @@ def get_db():
 
 
 @app.middleware("http")
-async def verify_api_key(request: Request, _call_next):
+async def verify_api_key(request: Request, call_next):
     authorization = request.headers['Authorization']
     if authorization != API_KEY:
         message = status_messages.public_status_messages.get_message('unauthorized_api_key')
@@ -44,6 +44,8 @@ async def verify_api_key(request: Request, _call_next):
             status_code=200,
             content=message
         )
+    response = await call_next(request)
+    return response
 
 
 @app.exception_handler(UnexpectedErrorException)
