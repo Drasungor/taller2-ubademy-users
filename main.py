@@ -96,9 +96,11 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     # TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
 
     # https://www.psycopg.org/docs/errors.html
-    # sqlalchemy.exc.IntegrityError
-    # psycopg2.errors.UniqueViolation
     aux_user = DbUser(user_data.email, user_data.password)
+    google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
+
+    if not google_account is None:
+        return status_messages.public_status_messages.get_message('has_google_account'),
 
     try:
         db.add(aux_user)
