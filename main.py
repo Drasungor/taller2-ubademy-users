@@ -1,3 +1,4 @@
+from sqlalchemy.engine import create_engine
 import uvicorn
 from fastapi import FastAPI, Request, Depends, HTTPException
 from sqlalchemy import exc
@@ -10,9 +11,11 @@ from models.login_data import Login
 from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
 from models.admin_login_data import AdminLogin
+from models.google_login_data import GoogleLogin
 from sqlalchemy.exc import DataError
 import database_models.user as db_user
 import database_models.admin as db_admin
+import database_models.google as db_google
 from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
@@ -71,7 +74,10 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
             detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
         )
     else:
-        return status_messages.public_status_messages.get_message('successful_login')
+        return {
+            **status_messages.public_status_messages.get_message('successful_login'),
+            'firebase_password': aux_user.firebase_password,
+            }
 
 
 @app.post('/admin_login/')
@@ -93,9 +99,11 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     # TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
 
     # https://www.psycopg.org/docs/errors.html
-    # sqlalchemy.exc.IntegrityError
-    # psycopg2.errors.UniqueViolation
     aux_user = DbUser(user_data.email, user_data.password)
+    google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
+
+    if google_account is not None:
+        return status_messages.public_status_messages.get_message('has_google_account'),
 
     try:
         db.add(aux_user)
@@ -103,6 +111,7 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
         return {
             **status_messages.public_status_messages.get_message('successful_registration'),
             'email': aux_user.email,
+            'firebase_password': aux_user.firebase_password
             }
     except exc.IntegrityError as e:
         db.rollback()
@@ -171,6 +180,50 @@ async def users_list(db: Session = Depends(get_db)):
         "users": emails_list
         }
 
+@app.get('/oauth_login')
+async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
+    aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
+    if aux_account is not None:
+        return status_messages.public_status_messages.get_message('has_normal_account')
+    google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
+
+    if google_account is None:
+        try:
+            db.add(google_account)
+            db.commit()
+            return {
+                **status_messages.public_status_messages.get_message('successful_registration'),
+                'email': google_account.email,
+                'firebase_password': google_account.firebase_password
+                }
+        except exc.IntegrityError as e:
+            db.rollback()
+            if isinstance(e.orig, NotNullViolation):
+                return status_messages.public_status_messages.get_message('null_value')
+                
+            else:
+                raise UnexpectedErrorException
+        except DataError as e:
+            db.rollback()
+            if isinstance(e.orig, StringDataRightTruncation):
+                return {
+                    **status_messages.public_status_messages.get_message('wrong_size_input'),
+                    'input_sizes': db_google.data_size}
+            else:
+                raise UnexpectedErrorException
+        except Exception:
+            db.rollback()
+            raise UnexpectedErrorException
+    else:
+        return {
+            **status_messages.public_status_messages.get_message('google_existing_account'),
+            'email': google_account.email,
+            'firebase_password': google_account.firebase_password
+            }
+
+
+
 if __name__ == '__main__':
+    # Base.metadata.drop_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     
