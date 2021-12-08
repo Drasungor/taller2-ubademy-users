@@ -10,19 +10,14 @@ data_size = {
     }
 
 
-class User(Base):
-    __tablename__ = "users"
+class Google(Base):
+    __tablename__ = "Google"
 
     email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), primary_key = True)
-    hashed_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
-    firebase_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
+    firebase = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
 
-    def __init__(self, email, password):
+    def __init__(self, email):
         self.email = None
-        self.hashed_password = None
         self.firebase_password = genword(charset = "hex", length = 50)
         if (email != ""):
             self.email = email
-
-        if (password != ""):
-            self.hashed_password = pbkdf2_sha256.hash(password)
