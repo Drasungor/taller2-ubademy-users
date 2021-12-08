@@ -74,7 +74,10 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
             detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
         )
     else:
-        return status_messages.public_status_messages.get_message('successful_login')
+        return {
+            **status_messages.public_status_messages.get_message('successful_login'),
+            'firebase_password': aux_user.firebase_password,
+            }
 
 
 @app.post('/admin_login/')
@@ -108,6 +111,7 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
         return {
             **status_messages.public_status_messages.get_message('successful_registration'),
             'email': aux_user.email,
+            'firebase_password': aux_user.firebase_password
             }
     except exc.IntegrityError as e:
         db.rollback()
