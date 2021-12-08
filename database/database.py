@@ -2,6 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 from time import sleep
 
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///./test.db')
@@ -15,7 +16,7 @@ has_connected = False
 while not has_connected:
     try:
         engine = create_engine(db_url, connect_args=engine_args)
-    except Exception:
+    except OperationalError:
         print(f"Failed to connect to database with url {db_url}, attempting to reconnect")
         sleep(1)
     else:
