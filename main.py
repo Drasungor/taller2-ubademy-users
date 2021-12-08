@@ -102,7 +102,7 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     aux_user = DbUser(user_data.email, user_data.password)
     google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
 
-    if not google_account is None:
+    if google_account is not None:
         return status_messages.public_status_messages.get_message('has_google_account'),
 
     try:
@@ -183,7 +183,7 @@ async def users_list(db: Session = Depends(get_db)):
 @app.get('/oauth_login')
 async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
-    if not aux_account is None:
+    if aux_account is not None:
         return status_messages.public_status_messages.get_message('has_normal_account')
     google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
 
