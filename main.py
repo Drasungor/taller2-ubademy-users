@@ -180,7 +180,8 @@ async def users_list(db: Session = Depends(get_db)):
         "users": emails_list
         }
 
-@app.get('/oauth_login')
+
+@app.post('/oauth_login')
 async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
     if aux_account is not None:
