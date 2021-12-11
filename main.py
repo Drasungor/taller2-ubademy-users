@@ -36,6 +36,27 @@ def get_db():
         db.close()
 
 
+def generate_first_admin():
+    db = Session()
+    aux_admin = db_admin.Admin("admin", "admin", "admin")
+
+    try:
+        db.add(aux_admin)
+        db.commit()
+        return True
+    except exc.IntegrityError as e:
+        db.rollback()
+        if isinstance(e.orig, UniqueViolation):
+            return True
+        else:
+            return False
+    except Exception:
+        db.rollback()
+        return False
+
+
+
+
 @app.exception_handler(UnexpectedErrorException)
 async def invalid_credentials_exception_handler(_request: Request,
                                                 _exc: UnexpectedErrorException):
@@ -224,6 +245,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
 
 
 if __name__ == '__main__':
+    if generate_first_admin():
+        print("Error generating first admin user")
     # Base.metadata.drop_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     
