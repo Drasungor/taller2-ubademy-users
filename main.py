@@ -201,7 +201,7 @@ async def users_list(db: Session = Depends(get_db)):
         "users": emails_list
         }
 
-@app.get('/oauth_login')
+@app.post('/oauth_login')
 async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
     if aux_account is not None:
@@ -209,7 +209,9 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
 
     if google_account is None:
+        google_account = db_google.Google(google_data.email)
         try:
+            print(google_account)
             db.add(google_account)
             db.commit()
             return {
@@ -232,8 +234,9 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
                     'input_sizes': db_google.data_size}
             else:
                 raise UnexpectedErrorException
-        except Exception:
+        except Exception as e:
             db.rollback()
+            print(e)
             raise UnexpectedErrorException
     else:
         return {
@@ -245,8 +248,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
 
 
 if __name__ == '__main__':
-    if generate_first_admin():
+    if not generate_first_admin():
         print("Error generating first admin user")
-    # Base.metadata.drop_all(engine)
+    #Base.metadata.drop_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     
