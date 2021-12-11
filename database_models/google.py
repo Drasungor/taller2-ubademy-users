@@ -14,7 +14,7 @@ class Google(Base):
     __tablename__ = "Google"
 
     email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), primary_key = True)
-    firebase = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
+    firebase_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
 
     def __init__(self, email):
         self.email = None
