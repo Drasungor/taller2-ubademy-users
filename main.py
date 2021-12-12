@@ -12,6 +12,7 @@ from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
 from models.admin_login_data import AdminLogin
 from models.google_login_data import GoogleLogin
+from models.block_user_data import BlockUserData
 from sqlalchemy.exc import DataError
 import database_models.user as db_user
 import database_models.admin as db_admin
@@ -245,7 +246,53 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             'firebase_password': google_account.firebase_password
             }
 
+@app.post('/block_user')
+async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
 
+    if not block_data.is_admin:
+        return status_messages.public_status_messages.get_message('not_admin')
+        
+    aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
+    if aux_account is not None:
+        return status_messages.public_status_messages.get_message('has_normal_account')
+    google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
+
+    if google_account is None:
+        google_account = db_google.Google(google_data.email)
+        try:
+            print(google_account)
+            db.add(google_account)
+            db.commit()
+            return {
+                **status_messages.public_status_messages.get_message('successful_registration'),
+                'email': google_account.email,
+                'firebase_password': google_account.firebase_password
+                }
+        except exc.IntegrityError as e:
+            db.rollback()
+            if isinstance(e.orig, NotNullViolation):
+                return status_messages.public_status_messages.get_message('null_value')
+                
+            else:
+                raise UnexpectedErrorException
+        except DataError as e:
+            db.rollback()
+            if isinstance(e.orig, StringDataRightTruncation):
+                return {
+                    **status_messages.public_status_messages.get_message('wrong_size_input'),
+                    'input_sizes': db_google.data_size}
+            else:
+                raise UnexpectedErrorException
+        except Exception as e:
+            db.rollback()
+            print(e)
+            raise UnexpectedErrorException
+    else:
+        return {
+            **status_messages.public_status_messages.get_message('google_existing_account'),
+            'email': google_account.email,
+            'firebase_password': google_account.firebase_password
+            }
 
 if __name__ == '__main__':
     if not generate_first_admin():
