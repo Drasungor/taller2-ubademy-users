@@ -248,9 +248,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             'firebase_password': google_account.firebase_password
             }
 
-
-
-def update_blocked_status(block_data: BlockUserData, db: Session, is_blocked: bool):
+@app.post('/change_blocked_status')
+async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
     if not block_data.is_admin:
         return status_messages.public_status_messages.get_message('not_admin')
 
@@ -259,11 +258,11 @@ def update_blocked_status(block_data: BlockUserData, db: Session, is_blocked: bo
         google_aux_account = db.query(db_google.Google).filter(db_google.Google.email == block_data.blocked_user).first()
         if aux_account is not None:
             db.query(db_user.User).filter(db_user.User.email == block_data.blocked_user).update({
-                db_user.User.is_blocked: is_blocked
+                db_user.User.is_blocked: block_data.is_blocked
             })
         elif google_aux_account is not None:
             db.query(db_google.Google).filter(db_google.Google.email == block_data.blocked_user).update({
-                db_google.Google.is_blocked: is_blocked
+                db_google.Google.is_blocked: block_data.is_blocked
             })
         else:
             return status_messages.public_status_messages.get_message('user_does_not_exist')
@@ -278,18 +277,6 @@ def update_blocked_status(block_data: BlockUserData, db: Session, is_blocked: bo
         db.rollback()
         print(e)
         raise UnexpectedErrorException
-
-@app.post('/block_user')
-async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
-    return update_blocked_status(block_data, db, True)
-
-@app.post('/unblock_user')
-async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
-    return update_blocked_status(block_data, db, False)
-
-@app.post('/change_blocked_status')
-async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
-    return update_blocked_status(block_data, db, False)
 
 if __name__ == '__main__':
     if not generate_first_admin():
