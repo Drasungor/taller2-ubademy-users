@@ -26,3 +26,7 @@ class Google(Base):
         
         if (isinstance(is_blocked, bool)):
             self.is_blocked = is_blocked
+
+    def __print__(self):
+        print("Email: " + self.email)
+        print("Is blocked: " + str(self.hashed_password))

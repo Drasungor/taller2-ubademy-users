@@ -193,12 +193,17 @@ async def create_admin(admin_data: AdminRegistrationData, db: Session = Depends(
 
 @app.get('/users_list/{is_admin}')
 async def users_list(is_admin: str, db: Session = Depends(get_db)):
-    if not is_admin:
+    if is_admin  != "true":
         return status_messages.public_status_messages.get_message('not_admin')
 
     users_query = db.query(DbUser.email).all()
+    google_users_query = db.query(db_google.Google.email).all()
     users_list = []
     for user in users_list:
+        print(user)
+        users_query.append({"email": user[0], "blocked_status": user[3]})
+    for user in google_users_query:
+        print(user)
         users_query.append({"email": user[0], "blocked_status": user[3]})
 
     return {
