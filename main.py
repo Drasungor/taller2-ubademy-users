@@ -205,7 +205,7 @@ async def users_list(db: Session = Depends(get_db)):
 async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
     if aux_account is not None:
-        return {**status_messages.public_status_messages.get_message('has_normal_account'), "created": False}
+        return {**status_messages.public_status_messages.get_message('has_normal_account')}
     google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
 
     if google_account is None:
@@ -218,7 +218,7 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
                 **status_messages.public_status_messages.get_message('successful_registration'),
                 'email': google_account.email,
                 'firebase_password': google_account.firebase_password,
-                "created": True
+                'created': True
                 }
         except exc.IntegrityError as e:
             db.rollback()
@@ -243,7 +243,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
         return {
             **status_messages.public_status_messages.get_message('google_existing_account'),
             'email': google_account.email,
-            'firebase_password': google_account.firebase_password
+            'firebase_password': google_account.firebase_password, 
+            'created': False
             }
 
 
