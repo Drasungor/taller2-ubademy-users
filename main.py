@@ -266,11 +266,13 @@ async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
             db.query(db_user.User).filter(db_user.User.email == block_data.modified_user).update({
                 db_user.User.is_blocked: block_data.is_blocked
             })
+            db.commit()
             return status_messages.public_status_messages.get_message('user_updated')
         elif google_aux_account is not None:
             db.query(db_google.Google).filter(db_google.Google.email == block_data.modified_user).update({
                 db_google.Google.is_blocked: block_data.is_blocked
             })
+            db.commit()
             return status_messages.public_status_messages.get_message('user_updated')
         else:
             return status_messages.public_status_messages.get_message('user_does_not_exist')
