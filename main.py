@@ -279,13 +279,15 @@ def update_blocked_status(block_data: BlockUserData, db: Session, is_blocked: bo
         print(e)
         raise UnexpectedErrorException
 
-
-
 @app.post('/block_user')
 async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
     return update_blocked_status(block_data, db, True)
 
 @app.post('/unblock_user')
+async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
+    return update_blocked_status(block_data, db, False)
+
+@app.post('/change_blocked_status')
 async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
     return update_blocked_status(block_data, db, False)
 
