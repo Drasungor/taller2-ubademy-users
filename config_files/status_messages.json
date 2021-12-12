@@ -14,5 +14,6 @@
 "wrong_size_input": {"status": "error", "message": "wrong input size"},
 "user_is_blocked": {"status": "error", "message": "user is blocked"},
 "user_does_not_exist": {"status": "error", "message": "user does not exist"},
+"user_updated": {"status": "ok", "message": "user updated"},
 "not_admin": {"status": "error", "message": "user is not admin"}
 }

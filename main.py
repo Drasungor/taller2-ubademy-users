@@ -196,19 +196,18 @@ async def users_list(is_admin: str, db: Session = Depends(get_db)):
     if is_admin  != "true":
         return status_messages.public_status_messages.get_message('not_admin')
 
-    users_query = db.query(DbUser.email).all()
-    google_users_query = db.query(db_google.Google.email).all()
+    users_query = db.query(DbUser.email, DbUser.is_blocked).all()
+    google_users_query = db.query(db_google.Google.email, db_google.Google.is_blocked).all()
     users_list = []
-    for user in users_list:
-        print(user)
-        users_query.append({"email": user[0], "blocked_status": user[3]})
+
+    for user in users_query:
+        users_list.append({"email": user[0], "is_blocked": user[1]})
     for user in google_users_query:
-        print(user)
-        users_query.append({"email": user[0], "blocked_status": user[3]})
+        users_list.append({"email": user[0], "is_blocked": user[1]})
 
     return {
         **status_messages.public_status_messages.get_message('successful_get_users'),
-        "users": users_query
+        "users": users_list
         }
 
 @app.post('/oauth_login')
@@ -261,16 +260,18 @@ async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
         return status_messages.public_status_messages.get_message('not_admin')
 
     try:
-        aux_account = db.query(db_user.User).filter(db_user.User.email == block_data.blocked_user).first()
-        google_aux_account = db.query(db_google.Google).filter(db_google.Google.email == block_data.blocked_user).first()
+        aux_account = db.query(db_user.User).filter(db_user.User.email == block_data.modified_user).first()
+        google_aux_account = db.query(db_google.Google).filter(db_google.Google.email == block_data.modified_user).first()
         if aux_account is not None:
-            db.query(db_user.User).filter(db_user.User.email == block_data.blocked_user).update({
+            db.query(db_user.User).filter(db_user.User.email == block_data.modified_user).update({
                 db_user.User.is_blocked: block_data.is_blocked
             })
+            return status_messages.public_status_messages.get_message('user_updated')
         elif google_aux_account is not None:
-            db.query(db_google.Google).filter(db_google.Google.email == block_data.blocked_user).update({
+            db.query(db_google.Google).filter(db_google.Google.email == block_data.modified_user).update({
                 db_google.Google.is_blocked: block_data.is_blocked
             })
+            return status_messages.public_status_messages.get_message('user_updated')
         else:
             return status_messages.public_status_messages.get_message('user_does_not_exist')
     except exc.IntegrityError as e:
