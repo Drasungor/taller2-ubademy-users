@@ -193,15 +193,14 @@ async def create_admin(admin_data: AdminRegistrationData, db: Session = Depends(
 
 @app.get('/users_list')
 async def users_list(db: Session = Depends(get_db)):
-    emails_query = db.query(DbUser.email).all()
-    emails_list = []
-    for email in emails_query:
-        emails_list.append(email[0])
+    users_query = db.query(DbUser.email).all()
+    users_list = []
+    for user in users_list:
+        users_query.append({"email": user[0], "blocked_status": user[3]})
 
-    return_message = status_messages.public_status_messages.get_message('successful_get_users')
     return {
-        **return_message,
-        "users": emails_list
+        **status_messages.public_status_messages.get_message('successful_get_users'),
+        "users": users_query
         }
 
 @app.post('/oauth_login')
