@@ -191,8 +191,11 @@ async def create_admin(admin_data: AdminRegistrationData, db: Session = Depends(
         raise UnexpectedErrorException
 
 
-@app.get('/users_list')
-async def users_list(db: Session = Depends(get_db)):
+@app.get('/users_list/{is_admin}')
+async def users_list(is_admin: str, db: Session = Depends(get_db)):
+    if not is_admin:
+        return status_messages.public_status_messages.get_message('not_admin')
+
     users_query = db.query(DbUser.email).all()
     users_list = []
     for user in users_list:
