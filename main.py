@@ -256,9 +256,6 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
 
 @app.post('/change_blocked_status')
 async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
-    if not block_data.is_admin:
-        return status_messages.public_status_messages.get_message('not_admin')
-
     try:
         aux_account = db.query(db_user.User).filter(db_user.User.email == block_data.modified_user).first()
         google_aux_account = db.query(db_google.Google).filter(db_google.Google.email == block_data.modified_user).first()
