@@ -12,6 +12,7 @@ from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
 from models.admin_login_data import AdminLogin
 from models.google_login_data import GoogleLogin
+from models.block_user_data import BlockUserData
 from sqlalchemy.exc import DataError
 import database_models.user as db_user
 import database_models.admin as db_admin
@@ -94,6 +95,8 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
             status_code=400,
             detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
         )
+    elif aux_user.is_blocked:
+        return status_messages.public_status_messages.get_message('user_is_blocked')
     else:
         return {
             **status_messages.public_status_messages.get_message('successful_login'),
@@ -120,7 +123,7 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     # TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
 
     # https://www.psycopg.org/docs/errors.html
-    aux_user = DbUser(user_data.email, user_data.password)
+    aux_user = DbUser(user_data.email, user_data.password, False)
     google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
 
     if google_account is not None:
@@ -188,17 +191,23 @@ async def create_admin(admin_data: AdminRegistrationData, db: Session = Depends(
         raise UnexpectedErrorException
 
 
-@app.get('/users_list')
-async def users_list(db: Session = Depends(get_db)):
-    emails_query = db.query(DbUser.email).all()
-    emails_list = []
-    for email in emails_query:
-        emails_list.append(email[0])
+@app.get('/users_list/{is_admin}')
+async def users_list(is_admin: str, db: Session = Depends(get_db)):
+    if is_admin  != "true":
+        return status_messages.public_status_messages.get_message('not_admin')
 
-    return_message = status_messages.public_status_messages.get_message('successful_get_users')
+    users_query = db.query(DbUser.email, DbUser.is_blocked).all()
+    google_users_query = db.query(db_google.Google.email, db_google.Google.is_blocked).all()
+    users_list = []
+
+    for user in users_query:
+        users_list.append({"email": user[0], "is_blocked": user[1]})
+    for user in google_users_query:
+        users_list.append({"email": user[0], "is_blocked": user[1]})
+
     return {
-        **return_message,
-        "users": emails_list
+        **status_messages.public_status_messages.get_message('successful_get_users'),
+        "users": users_list
         }
 
 @app.post('/oauth_login')
@@ -209,9 +218,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
 
     if google_account is None:
-        google_account = db_google.Google(google_data.email)
+        google_account = db_google.Google(google_data.email, False)
         try:
-            print(google_account)
             db.add(google_account)
             db.commit()
             return {
@@ -234,6 +242,7 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
                     **status_messages.public_status_messages.get_message('wrong_size_input'),
                     'input_sizes': db_google.data_size}
             else:
+                print(e)
                 raise UnexpectedErrorException
         except Exception as e:
             db.rollback()
@@ -247,11 +256,40 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             'created': False
             }
 
-
+@app.post('/change_blocked_status')
+async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
+    try:
+        aux_account = db.query(db_user.User).filter(db_user.User.email == block_data.modified_user).first()
+        google_aux_account = db.query(db_google.Google).filter(db_google.Google.email == block_data.modified_user).first()
+        if aux_account is not None:
+            db.query(db_user.User).filter(db_user.User.email == block_data.modified_user).update({
+                db_user.User.is_blocked: block_data.is_blocked
+            })
+            db.commit()
+            return status_messages.public_status_messages.get_message('user_updated')
+        elif google_aux_account is not None:
+            db.query(db_google.Google).filter(db_google.Google.email == block_data.modified_user).update({
+                db_google.Google.is_blocked: block_data.is_blocked
+            })
+            db.commit()
+            return status_messages.public_status_messages.get_message('user_updated')
+        else:
+            return status_messages.public_status_messages.get_message('user_does_not_exist')
+    except exc.IntegrityError as e:
+        db.rollback()
+        if isinstance(e.orig, NotNullViolation):
+            return status_messages.public_status_messages.get_message('null_value')
+        else:
+            print(e)
+            raise UnexpectedErrorException
+    except Exception as e:
+        db.rollback()
+        print(e)
+        raise UnexpectedErrorException
 
 if __name__ == '__main__':
     if not generate_first_admin():
         print("Error generating first admin user")
-    #Base.metadata.drop_all(engine)
+    # Base.metadata.drop_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     
