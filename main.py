@@ -288,6 +288,6 @@ async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
 if __name__ == '__main__':
     if not generate_first_admin():
         print("Error generating first admin user")
-    #Base.metadata.drop_all(engine)
+    # Base.metadata.drop_all(engine)
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT')))
     
