@@ -117,9 +117,6 @@ async def login(admin_login_data: AdminLogin, db: Session = Depends(get_db)):
 
 @app.post('/create/')
 async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
-    # TODO: AGREGAR REGISTRO CON GOOGLE
-    # TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
-
     # https://www.psycopg.org/docs/errors.html
     aux_user = DbUser(user_data.email, user_data.password, False)
     google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
