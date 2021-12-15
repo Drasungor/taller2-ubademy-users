@@ -110,11 +110,7 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
 async def login(admin_login_data: AdminLogin, db: Session = Depends(get_db)):
     aux_admin = db.query(db_admin.Admin).filter(db_admin.Admin.email == admin_login_data.email).first()
     if (aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password)):
-        # TODO: ESTO NO TIENE QUE SER UNA RESPUESTA CON 400
-        raise HTTPException(
-            status_code=400,
-            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
-        )
+        return status_messages.public_status_messages.get_message('failed_login')
     else:
         return status_messages.public_status_messages.get_message('successful_login')
 
