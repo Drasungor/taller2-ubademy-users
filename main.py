@@ -23,6 +23,7 @@ import configuration.status_messages as status_messages
 from psycopg2.errors import NotNullViolation, UniqueViolation, StringDataRightTruncation
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
+from datetime import datetime
 
 Base.metadata.create_all(engine)
 
@@ -91,13 +92,14 @@ async def pong():
 async def login(login_data: Login, db: Session = Depends(get_db)):
     aux_user = db.query(DbUser).filter(DbUser.email == login_data.email).first()
     if (aux_user is None) or (not pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
-        raise HTTPException(
-            status_code=400,
-            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
-        )
+        return status_messages.public_status_messages.get_message('failed_login')
     elif aux_user.is_blocked:
         return status_messages.public_status_messages.get_message('user_is_blocked')
     else:
+        db.query(DbUser).filter(DbUser.email == login_data.email).update({
+                DbUser.last_login_date: datetime.now()
+            })
+        db.commit()
         return {
             **status_messages.public_status_messages.get_message('successful_login'),
             'firebase_password': aux_user.firebase_password,
@@ -249,6 +251,10 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             print(e)
             raise UnexpectedErrorException
     else:
+        db.query(db_google.Google).filter(db_google.Google.email == google_data.email).update({
+                db_google.Google.last_login_date: datetime.now()
+            })
+        db.commit()
         return {
             **status_messages.public_status_messages.get_message('google_existing_account'),
             'email': google_account.email,
