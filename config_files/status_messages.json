@@ -15,5 +15,6 @@
 "user_is_blocked": {"status": "error", "message": "user is blocked"},
 "user_does_not_exist": {"status": "error", "message": "user does not exist"},
 "user_updated": {"status": "ok", "message": "user updated"},
+"got_metrics": {"status": "ok", "message": "got metrics"},
 "not_admin": {"status": "error", "message": "user is not admin"}
 }

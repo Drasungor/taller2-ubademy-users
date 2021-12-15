@@ -286,6 +286,49 @@ async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
         print(e)
         raise UnexpectedErrorException
 
+
+@app.get('/users_metrics')
+async def users_metrics(db: Session = Depends(get_db)):
+    users_query = db.query(DbUser.registration_date, DbUser.last_login_date, DbUser.is_blocked).all()
+    google_users_query = db.query(db_google.Google.registration_date, db_google.Google.last_login_date, db_google.Google.is_blocked).all()
+    users_list = []
+
+    date_now = datetime.now()
+    users_logged_last_hour = 0
+    google_users_logged_last_hour = 0
+    users_registered_last_day = 0
+    google_users_registered_last_day = 0
+    blocked_users = 0
+    for user in users_query:
+        if ((date_now - user[0]).total_seconds() < (24 * 3600)): #If the user registered in the last day
+            users_registered_last_day += 1
+        if ((date_now - user[1]).total_seconds() < 3600): #If the user logged in in the last hour
+            users_logged_last_hour += 1
+        if user[2]: #If the user is blocked
+            blocked_users += 1
+    for user in google_users_query:
+        if ((date_now - user[0]).total_seconds() < (24 * 3600)): #If the user registered in the last day
+            google_users_registered_last_day += 1
+        if ((date_now - user[1]).total_seconds() < 3600): #If the user logged in in the last hour
+            google_users_logged_last_hour += 1
+        if user[2]: #If the user is blocked
+            blocked_users += 1
+
+    users_amount = len(users_query) + len(google_users_query)
+    return {
+        **status_messages.public_status_messages.get_message('got_metrics'),
+        "users_amount": users_amount,
+        "blocked_users": blocked_users,
+        "non_blocked_users": users_amount - blocked_users,
+        "last_registered_users": users_registered_last_day,
+        "last_logged_users": users_logged_last_hour,
+        "last_registered_google_users": google_users_registered_last_day,
+        "last_logged_google_users": google_users_logged_last_hour
+        }
+
+
+
+
 if __name__ == '__main__':
     if not generate_first_admin():
         print("Error generating first admin user")
