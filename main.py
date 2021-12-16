@@ -23,6 +23,7 @@ import configuration.status_messages as status_messages
 from psycopg2.errors import NotNullViolation, UniqueViolation, StringDataRightTruncation
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
+from datetime import datetime
 
 Base.metadata.create_all(engine)
 
@@ -91,13 +92,14 @@ async def pong():
 async def login(login_data: Login, db: Session = Depends(get_db)):
     aux_user = db.query(DbUser).filter(DbUser.email == login_data.email).first()
     if (aux_user is None) or (not pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
-        raise HTTPException(
-            status_code=400,
-            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
-        )
+        return status_messages.public_status_messages.get_message('failed_login')
     elif aux_user.is_blocked:
         return status_messages.public_status_messages.get_message('user_is_blocked')
     else:
+        db.query(DbUser).filter(DbUser.email == login_data.email).update({
+                DbUser.last_login_date: datetime.now()
+            })
+        db.commit()
         return {
             **status_messages.public_status_messages.get_message('successful_login'),
             'firebase_password': aux_user.firebase_password,
@@ -108,20 +110,13 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
 async def login(admin_login_data: AdminLogin, db: Session = Depends(get_db)):
     aux_admin = db.query(db_admin.Admin).filter(db_admin.Admin.email == admin_login_data.email).first()
     if (aux_admin is None) or (not pbkdf2_sha256.verify(admin_login_data.password, aux_admin.hashed_password)):
-        # TODO: ESTO NO TIENE QUE SER UNA RESPUESTA CON 400
-        raise HTTPException(
-            status_code=400,
-            detail=status_messages.public_status_messages.get_message('failed_login')[status_messages.MESSAGE_NAME_FIELD]
-        )
+        return status_messages.public_status_messages.get_message('failed_login')
     else:
         return status_messages.public_status_messages.get_message('successful_login')
 
 
 @app.post('/create/')
 async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
-    # TODO: AGREGAR REGISTRO CON GOOGLE
-    # TODO: CHEQUEAR QUE NO ESTE REGISTRADO NORMALMENTE O CON GOOGLE
-
     # https://www.psycopg.org/docs/errors.html
     aux_user = DbUser(user_data.email, user_data.password, False)
     google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
@@ -249,6 +244,10 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             print(e)
             raise UnexpectedErrorException
     else:
+        db.query(db_google.Google).filter(db_google.Google.email == google_data.email).update({
+                db_google.Google.last_login_date: datetime.now()
+            })
+        db.commit()
         return {
             **status_messages.public_status_messages.get_message('google_existing_account'),
             'email': google_account.email,
@@ -286,6 +285,49 @@ async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
         db.rollback()
         print(e)
         raise UnexpectedErrorException
+
+
+@app.get('/users_metrics')
+async def users_metrics(db: Session = Depends(get_db)):
+    users_query = db.query(DbUser.registration_date, DbUser.last_login_date, DbUser.is_blocked).all()
+    google_users_query = db.query(db_google.Google.registration_date, db_google.Google.last_login_date, db_google.Google.is_blocked).all()
+    users_list = []
+
+    date_now = datetime.now()
+    users_logged_last_hour = 0
+    google_users_logged_last_hour = 0
+    users_registered_last_day = 0
+    google_users_registered_last_day = 0
+    blocked_users = 0
+    for user in users_query:
+        if ((date_now - user[0]).total_seconds() < (24 * 3600)): #If the user registered in the last day
+            users_registered_last_day += 1
+        if ((date_now - user[1]).total_seconds() < 3600): #If the user logged in in the last hour
+            users_logged_last_hour += 1
+        if user[2]: #If the user is blocked
+            blocked_users += 1
+    for user in google_users_query:
+        if ((date_now - user[0]).total_seconds() < (24 * 3600)): #If the user registered in the last day
+            google_users_registered_last_day += 1
+        if ((date_now - user[1]).total_seconds() < 3600): #If the user logged in in the last hour
+            google_users_logged_last_hour += 1
+        if user[2]: #If the user is blocked
+            blocked_users += 1
+
+    users_amount = len(users_query) + len(google_users_query)
+    return {
+        **status_messages.public_status_messages.get_message('got_metrics'),
+        "users_amount": users_amount,
+        "blocked_users": blocked_users,
+        "non_blocked_users": users_amount - blocked_users,
+        "last_registered_users": users_registered_last_day,
+        "last_logged_users": users_logged_last_hour,
+        "last_registered_google_users": google_users_registered_last_day,
+        "last_logged_google_users": google_users_logged_last_hour
+        }
+
+
+
 
 if __name__ == '__main__':
     if not generate_first_admin():
