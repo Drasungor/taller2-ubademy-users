@@ -370,6 +370,8 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
     profile_response = requests.post('https://exp.host/--/api/v2/push/send', json=profile_json)
 
     print(profile_response.status_code)
+    if (profile_response.status_code != 200):
+        raise UnexpectedErrorException
     print(profile_response.json())
     return profile_response.json()
 
