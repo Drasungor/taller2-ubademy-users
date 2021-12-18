@@ -403,7 +403,7 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
         "to": aux_account.expo_token,
         "sound": 'default',
         "title": f'Message by {message_data.email}',
-        "body": message_data,
+        "body": message_data.message_body,
     }
     message_response = requests.post('https://exp.host/--/api/v2/push/send', json=message_json)
 
@@ -414,7 +414,7 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
 
     message_response_json = message_response.json()
     logger.info(f"Expo messaging response body: {message_response_json}")
-    return message_response_json
+    return {"status": "ok", "message": ""}
 
 
 if __name__ == '__main__':
