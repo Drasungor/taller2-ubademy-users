@@ -333,27 +333,6 @@ async def users_metrics(db: Session = Depends(get_db)):
 
 @app.post('/send_message')
 async def send_message(message_data: SendMessage, db: Session = Depends(get_db)):
-    # Notification Tool-> https://expo.dev/notifications
-    # async function sendPushNotification(expoPushToken) {
-    # const message = {
-    #     to: expoPushToken,
-    #     sound: 'default',
-    #     title: 'Original Title',
-    #     body: 'And here is the body!',
-    #     data: { someData: 'goes here' },
-    # };
-    # await fetch('https://exp.host/--/api/v2/push/send', {
-    #     method: 'POST',
-    #     headers: {
-    #     Accept: 'application/json',
-    #     'Accept-encoding': 'gzip, deflate',
-    #     'Content-Type': 'application/json',
-    #     },
-    #     body: JSON.stringify(message),
-    # });
-    # }
-
-
     aux_account = db.query(db_user.User).filter(db_user.User.email == message_data.user_receiver_email).first()
     if aux_account is None:
         aux_account = db.query(db_google.Google).filter(db_google.Google.email == message_data.user_receiver_email).first()
