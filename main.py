@@ -99,7 +99,8 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
         return status_messages.public_status_messages.get_message('user_is_blocked')
     else:
         db.query(DbUser).filter(DbUser.email == login_data.email).update({
-                DbUser.last_login_date: datetime.now()
+                DbUser.last_login_date: datetime.now(),
+                DbUser.expo_token: login_data.expo_token
             })
         db.commit()
         return {
@@ -120,7 +121,7 @@ async def login(admin_login_data: AdminLogin, db: Session = Depends(get_db)):
 @app.post('/create/')
 async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     # https://www.psycopg.org/docs/errors.html
-    aux_user = DbUser(user_data.email, user_data.password, False)
+    aux_user = DbUser(user_data.email, user_data.password, False, user_data.expo_token)
     google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
 
     if google_account is not None:
@@ -215,7 +216,7 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
 
     if google_account is None:
-        google_account = db_google.Google(google_data.email, False)
+        google_account = db_google.Google(google_data.email, False, google_data.expo_token)
         try:
             db.add(google_account)
             db.commit()
@@ -247,7 +248,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             raise UnexpectedErrorException
     else:
         db.query(db_google.Google).filter(db_google.Google.email == google_data.email).update({
-                db_google.Google.last_login_date: datetime.now()
+                db_google.Google.last_login_date: datetime.now(),
+                db_google.Google.expo_token: google_data.expo_token
             })
         db.commit()
         return {
@@ -350,7 +352,7 @@ async def send_message(db: Session = Depends(get_db)):
     # });
     # }
 
-    
+
 
     profile_json = {
         "to": expoPushToken,
