@@ -19,16 +19,21 @@ class Google(Base):
     is_blocked = Column(Boolean(), nullable = False)
     registration_date = Column(DateTime(), nullable = False)
     last_login_date = Column(DateTime(), nullable = False)
+    expo_token = Column(String(database_shared_constants.EXPO_TOKEN_LENGTH), nullable = False)
 
-    def __init__(self, email, is_blocked):
+    def __init__(self, email, is_blocked, expo_token):
         self.email = None
         self.is_blocked = None
+        self.expo_token = None
         self.firebase_password = genword(charset = "hex", length = 50)
         self.registration_date = datetime.now()
         self.last_login_date = datetime.now()
         if (email != ""):
             self.email = email
         
+        if (expo_token != ""):
+            self.expo_token = expo_token
+
         if (isinstance(is_blocked, bool)):
             self.is_blocked = is_blocked
 

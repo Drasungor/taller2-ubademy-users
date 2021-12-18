@@ -25,6 +25,8 @@ from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
 from datetime import datetime
 
+import requests
+
 Base.metadata.create_all(engine)
 
 app = FastAPI()
@@ -325,6 +327,43 @@ async def users_metrics(db: Session = Depends(get_db)):
         "last_registered_google_users": google_users_registered_last_day,
         "last_logged_google_users": google_users_logged_last_hour
         }
+
+@app.post('/send_message')
+async def send_message(db: Session = Depends(get_db)):
+    # Notification Tool-> https://expo.dev/notifications
+    # async function sendPushNotification(expoPushToken) {
+    # const message = {
+    #     to: expoPushToken,
+    #     sound: 'default',
+    #     title: 'Original Title',
+    #     body: 'And here is the body!',
+    #     data: { someData: 'goes here' },
+    # };
+    # await fetch('https://exp.host/--/api/v2/push/send', {
+    #     method: 'POST',
+    #     headers: {
+    #     Accept: 'application/json',
+    #     'Accept-encoding': 'gzip, deflate',
+    #     'Content-Type': 'application/json',
+    #     },
+    #     body: JSON.stringify(message),
+    # });
+    # }
+
+    
+
+    profile_json = {
+        "to": expoPushToken,
+        "sound": 'default',
+        "title": 'Original Title',
+        "body": 'And here is the body!',
+        "data": { someData: 'goes here' }
+    }
+    profile_response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
+        json=profile_json
+    )
+
 
 
 
