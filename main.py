@@ -344,7 +344,7 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
         "to": aux_account.expo_token,
         "sound": 'default',
         "title": f'Message by {message_data.email}',
-        "body": message_data,
+        "body": message_data.message_body,
     }
     profile_response = requests.post('https://exp.host/--/api/v2/push/send', json=profile_json)
 
