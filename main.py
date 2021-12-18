@@ -10,6 +10,7 @@ from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
+from models.send_message_data import SendMessage
 from models.admin_login_data import AdminLogin
 from models.google_login_data import GoogleLogin
 from models.block_user_data import BlockUserData
@@ -331,7 +332,7 @@ async def users_metrics(db: Session = Depends(get_db)):
         }
 
 @app.post('/send_message')
-async def send_message(db: Session = Depends(get_db)):
+async def send_message(message_data: SendMessage, db: Session = Depends(get_db)):
     # Notification Tool-> https://expo.dev/notifications
     # async function sendPushNotification(expoPushToken) {
     # const message = {
@@ -353,19 +354,24 @@ async def send_message(db: Session = Depends(get_db)):
     # }
 
 
+    aux_account = db.query(db_user.User).filter(db_user.User.email == message_data.user_receiver_email).first()
+    if aux_account is None:
+        aux_account = db.query(db_google.Google).filter(db_google.Google.email == message_data.user_receiver_email).first()
+
+    if aux_account is None:
+        return status_messages.public_status_messages.get_message('user_does_not_exist')
 
     profile_json = {
-        "to": expoPushToken,
+        "to": aux_account.expo_token,
         "sound": 'default',
-        "title": 'Original Title',
-        "body": 'And here is the body!',
-        "data": { someData: 'goes here' }
+        "title": f'Message by {message_data.email}',
+        "body": message_data,
     }
-    profile_response = requests.post(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
-        json=profile_json
-    )
+    profile_response = requests.post('https://exp.host/--/api/v2/push/send', json=profile_json)
 
+    print(profile_response.status_code)
+    print(profile_response.json())
+    return profile_response.json()
 
 
 
