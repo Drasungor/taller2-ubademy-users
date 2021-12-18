@@ -10,6 +10,7 @@ from models.user import User, fake_users_db
 from models.login_data import Login
 from models.registration_data import RegistrationData
 from models.admin_registration_data import AdminRegistrationData
+from models.send_message_data import SendMessage
 from models.admin_login_data import AdminLogin
 from models.google_login_data import GoogleLogin
 from models.block_user_data import BlockUserData
@@ -24,6 +25,8 @@ from psycopg2.errors import NotNullViolation, UniqueViolation, StringDataRightTr
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
 from datetime import datetime
+
+import requests
 
 Base.metadata.create_all(engine)
 
@@ -97,7 +100,8 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
         return status_messages.public_status_messages.get_message('user_is_blocked')
     else:
         db.query(DbUser).filter(DbUser.email == login_data.email).update({
-                DbUser.last_login_date: datetime.now()
+                DbUser.last_login_date: datetime.now(),
+                DbUser.expo_token: login_data.expo_token
             })
         db.commit()
         return {
@@ -118,7 +122,7 @@ async def login(admin_login_data: AdminLogin, db: Session = Depends(get_db)):
 @app.post('/create/')
 async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     # https://www.psycopg.org/docs/errors.html
-    aux_user = DbUser(user_data.email, user_data.password, False)
+    aux_user = DbUser(user_data.email, user_data.password, False, user_data.expo_token)
     google_account = db.query(db_google.Google).filter(db_google.Google.email == user_data.email).first()
 
     if google_account is not None:
@@ -213,7 +217,7 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     google_account = db.query(db_google.Google).filter(db_google.Google.email == google_data.email).first()
 
     if google_account is None:
-        google_account = db_google.Google(google_data.email, False)
+        google_account = db_google.Google(google_data.email, False, google_data.expo_token)
         try:
             db.add(google_account)
             db.commit()
@@ -245,7 +249,8 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             raise UnexpectedErrorException
     else:
         db.query(db_google.Google).filter(db_google.Google.email == google_data.email).update({
-                db_google.Google.last_login_date: datetime.now()
+                db_google.Google.last_login_date: datetime.now(),
+                db_google.Google.expo_token: google_data.expo_token
             })
         db.commit()
         return {
@@ -325,6 +330,29 @@ async def users_metrics(db: Session = Depends(get_db)):
         "last_registered_google_users": google_users_registered_last_day,
         "last_logged_google_users": google_users_logged_last_hour
         }
+
+@app.post('/send_message')
+async def send_message(message_data: SendMessage, db: Session = Depends(get_db)):
+    aux_account = db.query(db_user.User).filter(db_user.User.email == message_data.user_receiver_email).first()
+    if aux_account is None:
+        aux_account = db.query(db_google.Google).filter(db_google.Google.email == message_data.user_receiver_email).first()
+
+    if aux_account is None:
+        return status_messages.public_status_messages.get_message('user_does_not_exist')
+
+    profile_json = {
+        "to": aux_account.expo_token,
+        "sound": 'default',
+        "title": f'Message by {message_data.email}',
+        "body": message_data,
+    }
+    profile_response = requests.post('https://exp.host/--/api/v2/push/send', json=profile_json)
+
+    print(profile_response.status_code)
+    if (profile_response.status_code != 200):
+        raise UnexpectedErrorException
+    print(profile_response.json())
+    return profile_response.json()
 
 
 
