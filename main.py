@@ -14,6 +14,7 @@ from models.send_message_data import SendMessage
 from models.admin_login_data import AdminLogin
 from models.google_login_data import GoogleLogin
 from models.block_user_data import BlockUserData
+from models.logout_data import Logout
 from sqlalchemy.exc import DataError
 import database_models.user as db_user
 import database_models.admin as db_admin
@@ -352,6 +353,30 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
         raise UnexpectedErrorException
     return {"status": "ok", "message": ""}
 
+
+@app.post('/log_out')
+async def log_out(logout_data: Logout, db: Session = Depends(get_db)):
+    is_normal_user = True
+    aux_account = db.query(db_user.User).filter(db_user.User.email == logout_data.email).first()
+    if aux_account is None:
+        is_normal_user = False
+        aux_account = db.query(db_google.Google).filter(db_google.Google.email == logout_data.email).first()
+
+    if aux_account is None:
+        return status_messages.public_status_messages.get_message('user_does_not_exist')
+
+    if is_normal_user:
+        db.query(DbUser).filter(DbUser.email == logout_data.email).update({
+                DbUser.expo_token: None
+            })
+        db.commit()
+    else:
+        db.query(db_google.Google).filter(db_google.Google.email == logout_data.email).update({
+                DbUser.expo_token: None
+            })
+        db.commit()
+    
+    return status_messages.public_status_messages.get_message('successful_logout')
 
 
 
