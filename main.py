@@ -341,13 +341,39 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
     if aux_account is None:
         return status_messages.public_status_messages.get_message('user_does_not_exist')
 
+
+#     await fetch('https://fcm.googleapis.com/fcm/send', {
+#   method: 'POST',
+#   headers: {
+#     'Content-Type': 'application/json',
+#     Authorization: key=<FCM-SERVER-KEY>,
+#   },
+#   body: JSON.stringify({
+#     to: '<NATIVE-DEVICE-PUSH-TOKEN>',
+#     priority: 'normal',
+#     data: {
+#       experienceId: '@yourExpoUsername/yourProjectSlug',
+#       title: "\uD83D\uDCE7 You've got mail",
+#       message: 'Hello world! \uD83C\uDF10',
+#     },
+#   }),
+# });
+
+
+    header = {
+        "Content-Type": "application/json",
+        "Authorization": "key=AAAAOrBOrNs:APA91bG5_FYG4PQWYaVw1J3_PyWS5lMbuOfRy94rstmL6gFnOqHd9D58IE45tyhp7WnEUrIfxme8P-wYQgtfRxGo1iq2r9zS_Y-x-ERhHZupTjg9HQ9xpRPc9CqFelzJY09UhcThwLr4"
+    }
     profile_json = {
         "to": aux_account.expo_token,
-        "sound": 'default',
-        "title": f'Message by {message_data.email}',
-        "body": message_data.message_body,
+        "priority": "normal",
+        "data": {
+            "title": f'Message by {message_data.email}',
+            "message": message_data.message_body,
+            "experienceId": "@marcosrolando/ubademy"
+        }
     }
-    profile_response = requests.post('https://exp.host/--/api/v2/push/send', json=profile_json)
+    profile_response = requests.post('https://fcm.googleapis.com/fcm/send', json=profile_json, headers=header)
 
     if (profile_response.status_code != 200):
         raise UnexpectedErrorException
