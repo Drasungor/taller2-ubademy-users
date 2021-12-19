@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 from time import sleep
+from utils.logger import logger
 
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///./test.db')
 # Some versions of sqlalchemy do not support postgres in the url, it has to be postgresql
@@ -17,7 +18,7 @@ while not has_connected:
     try:
         engine = create_engine(db_url, connect_args=engine_args)
     except OperationalError:
-        print(f"Failed to connect to database with url {db_url}, attempting to reconnect")
+        logger.warning(f"Failed to connect to database with url {db_url}, attempting to reconnect")
         sleep(1)
     else:
         has_connected = True
