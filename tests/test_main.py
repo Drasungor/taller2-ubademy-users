@@ -49,7 +49,7 @@ def test_create_user(test_db):
         json={
             'email': 'test@mail.com',
             'password': 'secret_password',
-            'name': 'John Doe'
+            'expo_token': 'expo12345token'
         }
     )
     assert response.status_code == 200
@@ -73,7 +73,7 @@ def test_create_user_fails_to_create_the_same_user_multiple_times(test_db):
         json={
             'email': 'test@mail.com',
             'password': 'secret_password',
-            'name': 'John Doe'
+            'expo_token': 'expo12345token'
         }
     )
     response = client.post(
@@ -81,7 +81,7 @@ def test_create_user_fails_to_create_the_same_user_multiple_times(test_db):
         json={
             'email': 'test@mail.com',
             'password': 'secret_password',
-            'name': 'John Doe'
+            'expo_token': 'expo12345token'
         }
     )
     assert response.status_code == 420
@@ -95,7 +95,7 @@ def test_users_list_returns_all_registered_emails(test_db):
         json={
             'email': 'test@mail.com',
             'password': 'secret_password',
-            'name': 'John Doe'
+            'expo_token': 'expo12345token'
         }
     )
     client.post(
@@ -103,7 +103,7 @@ def test_users_list_returns_all_registered_emails(test_db):
         json={
             'email': 'test2@mail.com',
             'password': 'secret_password2',
-            'name': 'John Doe 2'
+            'expo_token': 'expo12345token'
         }
     )
     client.post(
@@ -111,14 +111,14 @@ def test_users_list_returns_all_registered_emails(test_db):
         json={
             'email': 'test3@mail.com',
             'password': 'secret_password3',
-            'name': 'John Doe 3'
+            'expo_token': 'expo12345token'
         }
     )
 
-    response = client.get('/users_list')
+    response = client.get('/users_list/true')
     assert response.status_code == 200
     data = response.json()
-    actual_users = set(data['users'])
+    actual_users = set(map(lambda x: x['email'], data['users']))
     expected_users = set(['test@mail.com', 'test2@mail.com', 'test3@mail.com'])
     assert len(expected_users) == 3
 
