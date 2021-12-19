@@ -372,7 +372,7 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
         "data": {
             "title": f'Message by {message_data.email}',
             "message": message_data.message_body,
-            "experienceId": "@marcosrolando/ubademy"
+            "experienceId": "@marcosrolando/ubademyapp"
         }
     }
     profile_response = requests.post('https://fcm.googleapis.com/fcm/send', json=profile_json, headers=header)
