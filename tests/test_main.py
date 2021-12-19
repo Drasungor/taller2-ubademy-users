@@ -3,6 +3,7 @@ from main import app, get_db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from pytest import fixture
+from unittest.mock import patch, MagicMock
 
 from database.database import Base
 from configuration.status_messages import public_status_messages
@@ -126,6 +127,134 @@ def test_users_list_returns_all_registered_emails(test_db):
     # setA ^ setB is the symmetric difference between sets
     # (no difference == lists have the same contents)
     assert not actual_users ^ expected_users
+
+
+def test_oauth_login_registers_new_user(test_db):
+    response = client.post(
+        '/oauth_login',
+        json={
+            'email': 'test_mail@gmail.com',
+            'expo_token': 'expo12345token'
+        }
+    )
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'firebase_password' in response_data
+    assert response_data['created']
+    assert response_data['message'] == 'user successfully registered'
+
+
+def test_oauth_login_does_not_register_existing_user_again(test_db):
+    client.post(
+        '/oauth_login',
+        json={
+            'email': 'test_mail@gmail.com',
+            'expo_token': 'expo12345token'
+        }
+    )
+
+    response = client.post(
+        '/oauth_login',
+        json={
+            'email': 'test_mail@gmail.com',
+            'expo_token': 'expo12345token'
+        }
+    )
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'firebase_password' in response_data
+    assert not response_data['created']
+    assert response_data['message'] == 'google account exists'
+
+
+def test_change_block_status_can_block_user(test_db):
+    client.post(
+        '/create/',
+        json={
+            'email': 'test@mail.com',
+            'password': 'secret_password',
+            'expo_token': 'expo12345token'
+        }
+    )
+
+    response = client.post(
+        '/change_blocked_status',
+        json={
+            'modified_user': 'test@mail.com',
+            'is_blocked': True
+        }
+    )
+
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert response_data['message'] == 'user updated'
+
+
+def test_change_block_status_can_unblock_user(test_db):
+    client.post(
+        '/create/',
+        json={
+            'email': 'test@mail.com',
+            'password': 'secret_password',
+            'expo_token': 'expo12345token'
+        }
+    )
+
+    response = client.post(
+        '/change_blocked_status',
+        json={
+            'modified_user': 'test@mail.com',
+            'is_blocked': False
+        }
+    )
+
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert response_data['message'] == 'user updated'
+
+
+@patch('main.requests.post')
+def test_send_message(mock_expo_api, test_db):
+    mock_expo_api.return_value = MagicMock(status_code=200)
+
+    res = client.post(
+        '/create/',
+        json={
+            'email': 'receiver@mail.com',
+            'password': 'secret_password',
+            'expo_token': 'expo12345token'
+        }
+    )
+
+    assert res.status_code == 200
+
+    response = client.post(
+        '/send_message',
+        json={
+            'email': 'sender@mail.com',
+            'user_receiver_email': 'receiver@mail.com',
+            'message_body': 'this is my first message, how are you?'
+        }
+    )
+
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'message' in response_data
 
 
 app.dependency_overrides = {}
