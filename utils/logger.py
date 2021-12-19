@@ -1,3 +1,4 @@
+import os
 from utils.debug_logger import debug_logger
 from utils.newrelic_logger import NewrelicLogger
 
@@ -20,3 +21,6 @@ class Logger:
 
     def debug(self, message):
         self.logger.debug(message)
+
+
+logger = Logger(os.environ.get('NEWRELIC_API_KEY'))
