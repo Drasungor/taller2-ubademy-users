@@ -438,6 +438,7 @@ async def log_out(logout_data: Logout, db: Session = Depends(get_db)):
         aux_account = db.query(db_google.Google).filter(db_google.Google.email == logout_data.email).first()
 
     if aux_account is None:
+        logger.info("Error logging out: sendee user does not exist")
         return status_messages.public_status_messages.get_message('user_does_not_exist')
 
     if is_normal_user:
