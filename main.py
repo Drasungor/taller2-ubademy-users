@@ -359,6 +359,8 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
 #   }),
 # });
 
+    if aux_account.expo_token is None:
+        return {"status": "ok", "message": ""}
 
     header = {
         "Content-Type": "application/json",
