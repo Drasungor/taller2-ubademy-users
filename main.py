@@ -60,6 +60,16 @@ tags_metadata = [
         "otherwise if the user did not have a google account it is created, answearing also with an ok status and message {user successfully registered}." + 
         "If the user already has an account it returns an error status with the message {has normal account}",
     },
+    {
+        "name": "change_blocked_status",
+        "description": "Changes the account status of the received user based in the value received in is_blocked, if it is True then the user is blocked" + 
+        ", otherwise he is unblocked. Returns an ok status if the process was executed sucessfuly, otherwise it returns an error status with a message",
+    },
+    {
+        "name": "users_metrics",
+        "description": "Changes the account status of the received user based in the value received in is_blocked, if it is True then the user is blocked" + 
+        ", otherwise he is unblocked. Returns an ok status if the process was executed sucessfuly, otherwise it returns an error status with a message",
+    },
 ]
 
 
