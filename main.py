@@ -70,6 +70,11 @@ tags_metadata = [
         "description": "Changes the account status of the received user based in the value received in is_blocked, if it is True then the user is blocked" + 
         ", otherwise he is unblocked. Returns an ok status if the process was executed sucessfuly, otherwise it returns an error status with a message",
     },
+    {
+        "name": "send_message",
+        "description": "Sends an HTTP request to the endpoint that redirects it to the cellphone that has to receive the push notification, it returns" + 
+        "allways an ok status",
+    },
 ]
 
 
