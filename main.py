@@ -30,7 +30,40 @@ import requests
 
 Base.metadata.create_all(engine)
 
-app = FastAPI()
+
+tags_metadata = [
+    {
+        "name": "login",
+        "description": "Checks if the user is registered with a normal user account. If he is and the password is correct" +
+        "then it returns ok in status, otherwise it returns an error status and a message indicating the error (eg: user does not exist)",
+    },
+    {
+        "name": "admin_login",
+        "description": "Checks if the user is registered as an admin. If he is and the password is correct" +
+        "then it returns ok in status, otherwise it returns an error status and a message indicating the error",
+    },
+    {
+        "name": "create",
+        "description": "Tries to create a new normal user account, returns ok if it was created, error if the user already exists or any other error ocurrs",
+    },
+    {
+        "name": "admin_create",
+        "description": "Tries to create a new admin account, returns ok if it was created, error if the user already exists or any other error ocurrs",
+    },
+    {
+        "name": "users_list",
+        "description": "Returns a list containing the emails and blocking status of all the users from the platform",
+    },
+    {
+        "name": "oauth_login",
+        "description": "Checks if the user has a google account, if it already has then it returns ok  and the message: {google account exists}, " + 
+        "otherwise if the user did not have a google account it is created, answearing also with an ok status and message {user successfully registered}." + 
+        "If the user already has an account it returns an error status with the message {has normal account}",
+    },
+]
+
+
+app = FastAPI(openapi_tags=tags_metadata)
 
 
 def get_db():
@@ -70,7 +103,7 @@ async def invalid_credentials_exception_handler(_request: Request,
     )
 
 
-@app.get('/users/{username}', response_model=User)
+@app.get('/users/{username}')
 async def read_user(username: str):
     user_dict = fake_users_db[username]
     if not user_dict:
