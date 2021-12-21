@@ -430,7 +430,7 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
 
 @app.post('/log_out')
 async def log_out(logout_data: Logout, db: Session = Depends(get_db)):
-    logger.info(f"Received POST request at /send_message with body: {logout_data}")
+    logger.info(f"Received POST request at /log_out with body: {logout_data}")
     is_normal_user = True
     aux_account = db.query(db_user.User).filter(db_user.User.email == logout_data.email).first()
     if aux_account is None:
