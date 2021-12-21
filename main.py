@@ -13,6 +13,7 @@ from models.send_message_data import SendMessage
 from models.admin_login_data import AdminLogin
 from models.google_login_data import GoogleLogin
 from models.block_user_data import BlockUserData
+from models.logout_data import Logout
 from sqlalchemy.exc import DataError
 import database_models.user as db_user
 import database_models.admin as db_admin
@@ -399,14 +400,24 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
         logger.info("Error sending private message: sendee user does not exist")
         return status_messages.public_status_messages.get_message('user_does_not_exist')
 
+    if aux_account.expo_token is None:
+        logger.info(f"Tried to send message to non existent user {message_data.user_receiver_email}")
+        return {"status": "ok", "message": ""}
+
+    header = {
+        "Content-Type": "application/json",
+        "Authorization": "key=AAAAOrBOrNs:APA91bG5_FYG4PQWYaVw1J3_PyWS5lMbuOfRy94rstmL6gFnOqHd9D58IE45tyhp7WnEUrIfxme8P-wYQgtfRxGo1iq2r9zS_Y-x-ERhHZupTjg9HQ9xpRPc9CqFelzJY09UhcThwLr4"
+    }
     message_json = {
         "to": aux_account.expo_token,
-        "sound": 'default',
-        "title": f'Message by {message_data.email}',
-        "body": message_data.message_body,
+        "priority": "normal",
+        "data": {
+            "title": f'Message by {message_data.email}',
+            "message": message_data.message_body,
+            "experienceId": "@marcosrolando/ubademyapp"
+        }
     }
-    message_response = requests.post('https://exp.host/--/api/v2/push/send', json=message_json)
-
+    message_response = requests.post('https://exp.host/--/api/v2/push/send', json=message_json, headers = header)
     logger.info(f"Expo messaging response status code: {message_response.status_code}")
     if message_response.status_code != 200:
         logger.warning("Error sending private message: expo API response is not 200 OK")
@@ -415,6 +426,35 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
     message_response_json = message_response.json()
     logger.info(f"Expo messaging response body: {message_response_json}")
     return {"status": "ok", "message": ""}
+
+
+@app.post('/log_out')
+async def log_out(logout_data: Logout, db: Session = Depends(get_db)):
+    logger.info(f"Received POST request at /log_out with body: {logout_data}")
+    is_normal_user = True
+    aux_account = db.query(db_user.User).filter(db_user.User.email == logout_data.email).first()
+    if aux_account is None:
+        is_normal_user = False
+        aux_account = db.query(db_google.Google).filter(db_google.Google.email == logout_data.email).first()
+
+    if aux_account is None:
+        logger.info("Error logging out: sendee user does not exist")
+        return status_messages.public_status_messages.get_message('user_does_not_exist')
+
+    if is_normal_user:
+        db.query(DbUser).filter(DbUser.email == logout_data.email).update({
+                DbUser.expo_token: None
+            })
+        db.commit()
+    else:
+        db.query(db_google.Google).filter(db_google.Google.email == logout_data.email).update({
+                DbUser.expo_token: None
+            })
+        db.commit()
+    
+    return status_messages.public_status_messages.get_message('successful_logout')
+
+
 
 
 if __name__ == '__main__':

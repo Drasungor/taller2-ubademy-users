@@ -1,5 +1,6 @@
 {
 "successful_login": {"status": "ok", "message": "correct username and password"},
+"successful_logout": {"status": "ok", "message": "successful logout"},
 "failed_login": {"status": "error", "message": "incorrect username or password"}, 
 "hello_users": {"status": "ok", "message": "Hello users!"},
 "pong": {"status": "ok", "message": "pong"},

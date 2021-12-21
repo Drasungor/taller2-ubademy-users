@@ -19,7 +19,7 @@ class Google(Base):
     is_blocked = Column(Boolean(), nullable = False)
     registration_date = Column(DateTime(), nullable = False)
     last_login_date = Column(DateTime(), nullable = False)
-    expo_token = Column(String(database_shared_constants.EXPO_TOKEN_LENGTH), nullable = False)
+    expo_token = Column(String(database_shared_constants.EXPO_TOKEN_LENGTH), nullable = True)
 
     def __init__(self, email, is_blocked, expo_token):
         self.email = None
