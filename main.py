@@ -26,12 +26,15 @@ from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
 from datetime import datetime
 from utils.logger import logger
-
+from config_files.fastapi_metadata import tags_metadata
 import requests
 
 Base.metadata.create_all(engine)
 
-app = FastAPI()
+
+
+
+app = FastAPI(openapi_tags=tags_metadata)
 
 
 def get_db():
@@ -71,7 +74,7 @@ async def invalid_credentials_exception_handler(_request: Request,
     )
 
 
-@app.get('/users/{username}', response_model=User)
+@app.get('/users/{username}')
 async def read_user(username: str):
     user_dict = fake_users_db[username]
     if not user_dict:
@@ -92,7 +95,7 @@ async def pong():
     return status_messages.public_status_messages.get_message('pong')
 
 
-@app.post('/login/')
+@app.post('/login/', tags = ['login'])
 async def login(login_data: Login, db: Session = Depends(get_db)):
     logger.info(f"Received POST request at /login with body: {login_data}")
     aux_user = db.query(DbUser).filter(DbUser.email == login_data.email).first()
@@ -117,7 +120,7 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
             }
 
 
-@app.post('/admin_login/')
+@app.post('/admin_login/', tags = ['admin_login'])
 async def admin_login(admin_login_data: AdminLogin, db: Session = Depends(get_db)):
     logger.info("Received POST request at /admin_login/")
     aux_admin = db.query(db_admin.Admin)\
@@ -130,7 +133,7 @@ async def admin_login(admin_login_data: AdminLogin, db: Session = Depends(get_db
         return status_messages.public_status_messages.get_message('successful_login')
 
 
-@app.post('/create/')
+@app.post('/create/', tags = ['create'])
 async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
     logger.info("Received POST request at /create/")
     # https://www.psycopg.org/docs/errors.html
@@ -176,7 +179,7 @@ async def create(user_data: RegistrationData, db: Session = Depends(get_db)):
         raise UnexpectedErrorException
 
 
-@app.post('/admin_create/')
+@app.post('/admin_create/', tags = ['admin_create'])
 async def create_admin(admin_data: AdminRegistrationData, db: Session = Depends(get_db)):
     logger.info("Received POST request at /admin_create/")
     aux_admin = db_admin.Admin(admin_data.email, admin_data.password, admin_data.name)
@@ -216,7 +219,7 @@ async def create_admin(admin_data: AdminRegistrationData, db: Session = Depends(
         raise UnexpectedErrorException
 
 
-@app.get('/users_list/{is_admin}')
+@app.get('/users_list/{is_admin}', tags = ['users_list'])
 async def users_list(is_admin: str, db: Session = Depends(get_db)):
     logger.info(f"Received POST request at /users_list/{is_admin}")
     if is_admin != "true":
@@ -238,7 +241,7 @@ async def users_list(is_admin: str, db: Session = Depends(get_db)):
         }
 
 
-@app.post('/oauth_login')
+@app.post('/oauth_login', tags = ['oauth_login'])
 async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
     logger.info("Received POST request at /oauth_login")
     aux_account = db.query(db_user.User).filter(db_user.User.email == google_data.email).first()
@@ -295,7 +298,7 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             }
 
 
-@app.post('/change_blocked_status')
+@app.post('/change_blocked_status', tags = ['change_blocked_status'])
 async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
     logger.info(f"Received POST request at /change_blocked_status with body: {block_data}")
     try:
@@ -333,7 +336,7 @@ async def block_user(block_data: BlockUserData, db: Session = Depends(get_db)):
         raise UnexpectedErrorException
 
 
-@app.get('/users_metrics')
+@app.get('/users_metrics', tags = ['users_metrics'])
 async def users_metrics(db: Session = Depends(get_db)):
     logger.info("Received GET request at /users_metrics")
     users_query = db.query(
@@ -387,7 +390,7 @@ async def users_metrics(db: Session = Depends(get_db)):
         }
 
 
-@app.post('/send_message')
+@app.post('/send_message', tags = ['send_message'])
 async def send_message(message_data: SendMessage, db: Session = Depends(get_db)):
     logger.info(f"Received POST request at /send_message with body: {message_data}")
     aux_account = db.query(db_user.User)\
