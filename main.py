@@ -21,6 +21,7 @@ import database_models.google as db_google
 from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
+from configuration.api_key_whitelist import API_KEY_WHITELIST
 from psycopg2.errors import NotNullViolation, UniqueViolation, StringDataRightTruncation
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
@@ -47,7 +48,11 @@ def get_db():
 
 @app.middleware("http")
 async def verify_api_key(request: Request, call_next):
-    authorization = request.headers['Authorization']
+    if request.url.path in API_KEY_WHITELIST:
+        response = await call_next(request)
+        return response
+
+    authorization = request.headers.get('Authorization')
     if authorization != API_KEY:
         message = status_messages.public_status_messages.get_message('unauthorized_api_key')
         return JSONResponse(
