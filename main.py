@@ -29,11 +29,9 @@ from utils.logger import logger
 from config_files.fastapi_metadata import tags_metadata
 import requests
 
-API_KEY = 'db927b6105712695971a38fa593db084d95f86f68a1f85030ff5326d7a30c673'
+API_KEY = os.environ.get('API_KEY', 'db927b6105712695971a38fa593db084d95f86f68a1f85030ff5326d7a30c673')
 
 Base.metadata.create_all(engine)
-
-
 
 
 app = FastAPI(openapi_tags=tags_metadata)
