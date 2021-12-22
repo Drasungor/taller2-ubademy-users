@@ -1,7 +1,10 @@
 name: test-workflow
 on:
+  push:
+    branches: main
   pull_request:
-    branches: [ main ]
+    branches:
+      - '*'
     
 jobs:
   run-pytest:

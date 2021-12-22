@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-class Login(BaseModel):
+class GoogleLogin(BaseModel):
     email: str
-    password: str
     expo_token: str
