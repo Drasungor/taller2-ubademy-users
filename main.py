@@ -404,7 +404,6 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
         return status_messages.public_status_messages.get_message('user_does_not_exist')
 
     if aux_account.expo_token is None:
-        logger.info(f"Tried to send message to non existent user {message_data.user_receiver_email}")
         return {"status": "ok", "message": ""}
 
     header = {
