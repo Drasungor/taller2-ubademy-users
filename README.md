@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/Drasungor/taller2-ubademy-users/branch/main/graph/badge.svg?token=04FUFE05JP)](https://codecov.io/gh/Drasungor/taller2-ubademy-users)
+
 # taller2-ubademy-users
 
 API de Usuarios para el Trabajo Practico de Taller de Programacion 2: Ubademy.
