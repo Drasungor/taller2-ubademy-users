@@ -406,20 +406,16 @@ async def send_message(message_data: SendMessage, db: Session = Depends(get_db))
     if aux_account.expo_token is None:
         return {"status": "ok", "message": ""}
 
-    header = {
-        "Content-Type": "application/json",
-        "Authorization": "key=AAAAOrBOrNs:APA91bG5_FYG4PQWYaVw1J3_PyWS5lMbuOfRy94rstmL6gFnOqHd9D58IE45tyhp7WnEUrIfxme8P-wYQgtfRxGo1iq2r9zS_Y-x-ERhHZupTjg9HQ9xpRPc9CqFelzJY09UhcThwLr4"
-    }
     message_json = {
         "to": aux_account.expo_token,
-        "priority": "normal",
-        "data": {
-            "title": f'Message by {message_data.email}',
-            "message": message_data.message_body,
-            "experienceId": "@marcosrolando/ubademyapp"
-        }
+        "sound": 'default',
+        "title": f'Message by {message_data.email}',
+        "body": message_data.message_body,
     }
-    message_response = requests.post('https://exp.host/--/api/v2/push/send', json=message_json, headers = header)
+    print(aux_account.expo_token)
+    message_response = requests.post('https://exp.host/--/api/v2/push/send', json=message_json)
+    print(message_response)
+    print(message_response.json())
     logger.info(f"Expo messaging response status code: {message_response.status_code}")
     if message_response.status_code != 200:
         logger.warning("Error sending private message: expo API response is not 200 OK")
