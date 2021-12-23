@@ -285,6 +285,9 @@ async def oauth_login(google_data: GoogleLogin, db: Session = Depends(get_db)):
             logger.warning(f"Error creating google user: unexpected Exception: {e}")
             raise UnexpectedErrorException
     else:
+        if google_account.is_blocked:
+            logger.info("Error authenticating the user: user is blocked")
+            return status_messages.public_status_messages.get_message('user_is_blocked')
         db.query(db_google.Google).filter(db_google.Google.email == google_data.email).update({
                 db_google.Google.last_login_date: datetime.now(),
                 db_google.Google.expo_token: google_data.expo_token
