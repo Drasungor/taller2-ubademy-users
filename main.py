@@ -21,6 +21,7 @@ import database_models.google as db_google
 from passlib.hash import pbkdf2_sha256
 import os
 import configuration.status_messages as status_messages
+from configuration.api_key_whitelist import API_KEY_WHITELIST
 from psycopg2.errors import NotNullViolation, UniqueViolation, StringDataRightTruncation
 from server_exceptions.unexpected_error import UnexpectedErrorException
 from fastapi.responses import JSONResponse
@@ -29,9 +30,9 @@ from utils.logger import logger
 from config_files.fastapi_metadata import tags_metadata
 import requests
 
+API_KEY = os.environ.get('API_KEY', 'db927b6105712695971a38fa593db084d95f86f68a1f85030ff5326d7a30c673')
+
 Base.metadata.create_all(engine)
-
-
 
 
 app = FastAPI(openapi_tags=tags_metadata)
@@ -43,6 +44,23 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@app.middleware("http")
+async def verify_api_key(request: Request, call_next):
+    if request.url.path in API_KEY_WHITELIST:
+        response = await call_next(request)
+        return response
+
+    authorization = request.headers.get('Authorization')
+    if authorization != API_KEY:
+        message = status_messages.public_status_messages.get_message('unauthorized_api_key')
+        return JSONResponse(
+            status_code=200,
+            content=message
+        )
+    response = await call_next(request)
+    return response
 
 
 def generate_first_admin():
@@ -436,7 +454,7 @@ async def log_out(logout_data: Logout, db: Session = Depends(get_db)):
         aux_account = db.query(db_google.Google).filter(db_google.Google.email == logout_data.email).first()
 
     if aux_account is None:
-        logger.info("Error logging out: sendee user does not exist")
+        logger.info("Error logging out: user does not exist")
         return status_messages.public_status_messages.get_message('user_does_not_exist')
 
     if is_normal_user:
@@ -451,8 +469,6 @@ async def log_out(logout_data: Logout, db: Session = Depends(get_db)):
         db.commit()
     
     return status_messages.public_status_messages.get_message('successful_logout')
-
-
 
 
 if __name__ == '__main__':

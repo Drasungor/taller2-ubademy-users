@@ -9,6 +9,7 @@
 "existing_user": {"status": "error", "message": "user already registered"},
 "null_value": {"status": "error", "message": "null value received"},
 "unexpected_error": {"status": "error", "message": "error unexpected"},
+"unauthorized_api_key": {"status":  "error", "message": "unauthorized api key"},
 "has_normal_account": {"status": "error", "message": "has normal account"},
 "google_existing_account": {"status": "ok", "message": "google account exists"},
 "has_google_account": {"status": "error", "message": "has google account"},
